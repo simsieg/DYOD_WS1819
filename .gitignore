@@ -1,0 +1,40 @@
+obj/*
+.DS_STORE
+build/*
+build-*/*
+*.make
+Makefile*
+coverage
+.vscode
+benchmark.json
+*.sublime-*
+.idea
+*.xcodeproj
+*.xcworkspace
+.vscode
+*.pyc
+console.log
+.repl_history
+.queryplan.dot
+queryplan.png
+.lqp*.dot
+lqp*.png
+compile_times.txt
+exported_table_statistics.json
+version.hpp
+provider.hpp
+
+# Ignore cmake user files
+*.txt.user
+
+# Ignore generated TPC{CH} tables.
+# Intentionally only for root dir, tests contain csv we check in
+/*.csv
+/*.csv.meta
+
+# CLion cmake directory
+cmake-build-*
+
+# llvm coverage information
+default.profdata
+default.profraw
