@@ -55,6 +55,7 @@ enum class ScanType { OpEquals, OpNotEquals, OpLessThan, OpLessThanEquals, OpGre
 
 using PosList = std::vector<RowID>;
 
+// Prevents unnecessary, potentially expensive, copies by deleting copy constructor and copy assignment operator.
 class Noncopyable {
  protected:
   Noncopyable() = default;

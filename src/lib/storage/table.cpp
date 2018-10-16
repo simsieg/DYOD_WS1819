@@ -17,19 +17,11 @@
 
 namespace opossum {
 
-void Table::add_column_definition(const std::string& name, const std::string& type) {
-  // Implementation goes here
-}
-
 void Table::add_column(const std::string& name, const std::string& type) {
   // Implementation goes here
 }
 
 void Table::append(std::vector<AllTypeVariant> values) {
-  // Implementation goes here
-}
-
-void Table::create_new_chunk() {
   // Implementation goes here
 }
 
@@ -73,11 +65,5 @@ const std::string& Table::column_type(ColumnID column_id) const {
 Chunk& Table::get_chunk(ChunkID chunk_id) { throw std::runtime_error("Implement Table::get_chunk"); }
 
 const Chunk& Table::get_chunk(ChunkID chunk_id) const { throw std::runtime_error("Implement Table::get_chunk"); }
-
-void emplace_chunk(Chunk chunk) {
-  // Implementation goes here
-}
-
-void Table::compress_chunk(ChunkID chunk_id) { throw std::runtime_error("TODO"); }
 
 }  // namespace opossum
