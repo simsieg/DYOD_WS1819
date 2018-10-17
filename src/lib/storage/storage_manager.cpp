@@ -9,7 +9,10 @@
 
 namespace opossum {
 
-StorageManager& StorageManager::get() { throw std::runtime_error("Implement StorageManager::get"); }
+StorageManager& StorageManager::get() {
+  return *(new StorageManager());
+  // A really hacky fix to get the tests to run - replace this with your implementation
+}
 
 void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) {
   // Implementation goes here
