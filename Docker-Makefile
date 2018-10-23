@@ -18,7 +18,7 @@ VOLUMEMOUNTING = -v $(VOLUME):$(MOUNTPATH)
 # if you publish no ports, delete the right part
 PORTPUBLISHING = #-p $(LOCALPORT):$(CONTAINERPORT)
 
-.PHONY: build test test-shell build-test deploy build-deploy undeploy redeploy build-redeploy clean-volume clean clean install-dependencies configure
+.PHONY: build test test-shell build-test deploy build-deploy undeploy redeploy build-redeploy clean-volume clean-container clean install-dependencies configure
 
 build:
 	docker build -t $(IMAGE) .
@@ -50,13 +50,7 @@ build-redeploy: build redeploy
 clean-volume:
 	-docker volume rm $(VOLUME)
 
-clean:
+clean-container:
 	-docker rm $(NAME)
 
-clean: clean-volume clean
-
-install-dependencies:
-	echo No dependencies yet
-
-configure:
-	echo No configuration yet
+clean: clean-volume clean-container
