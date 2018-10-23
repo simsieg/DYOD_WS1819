@@ -18,39 +18,71 @@ VOLUMEMOUNTING = -v $(VOLUME):$(MOUNTPATH)
 # if you publish no ports, delete the right part
 PORTPUBLISHING = #-p $(LOCALPORT):$(CONTAINERPORT)
 
+PROGRAMRAW=docker run $(VOLUMEMOUNTING) $(PORTPUBLISHING) --rm
+PROGRAM=$(PROGRAMRAW) $(IMAGE)
+
 .PHONY: build test test-shell build-test deploy build-deploy undeploy redeploy build-redeploy clean-volume clean-container clean install-dependencies configure
 
-build:
+build-container:
 	docker build -t $(IMAGE) .
 
-build-nocache:
+build-container-nocache:
 	docker build -t $(IMAGE) --no-cache .
 
+init-test:
+	$(PROGRAM)
+
+build-container-test: build-container init-test
+
+hi:
+	set HI=hi >/dev/null
+
+echo: hi
+	echo $(HI)
+
+configure:
+	$(PROGRAM) configure
+
+build:
+	$(PROGRAM) build
+
+lint:
+	$(PROGRAM) lint
+
+format:
+	$(PROGRAM) format
+
 test:
-	docker run $(VOLUMEMOUNTING) $(PORTPUBLISHING) --rm $(IMAGE)
+	$(PROGRAM) test
 
-test-shell:
-	docker run -it $(VOLUMEMOUNTING) $(PORTPUBLISHING) --rm $(IMAGE) /bin/bash
+coverage:
+	$(PROGRAM) coverage
 
-build-test: build test
+sanitize:
+	$(PROGRAM) sanitize
 
-deploy:
-	docker run --detach --restart always --name=$(NAME) $(VOLUMEMOUNTING) $(PORTPUBLISHING) $(IMAGE)
+debug:
+	$(PROGRAM) debug
 
-build-deploy: build deploy
+git-update:
+	$(PROGRAM) git-update
 
-undeploy:
+ssh:
+	$(PROGRAM) ssh
+
+deploy-container:
+	echo nothing to deploy yet
+
+build-container-deploy: build-container deploy-container
+
+stop-container:
 	-docker stop $(NAME)
-	docker rm $(NAME)
-
-redeploy: undeploy deploy
-
-build-redeploy: build redeploy
-
-clean-volume:
-	-docker volume rm $(VOLUME)
 
 clean-container:
 	-docker rm $(NAME)
 
-clean: clean-volume clean-container
+undeploy-container: stop-container clean-container
+
+redeploy-container: undeploy-container deploy-container
+
+build-container-redeploy: build-container redeploy-container
