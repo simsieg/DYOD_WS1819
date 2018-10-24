@@ -28,6 +28,8 @@ DEBUGPROGRAMDETACHED := ${DEBUGPROGRAMRAW} --detach ${IMAGE} debug
 REMOTEDEBUGTARGET := tcp:127.0.0.1:7777
 DEBUGNOTIFICATION := connect the debugger to ${REMOTEDEBUGTARGET}
 
+CONTAINERBUILDDEPENDENCIES := Dockerfile run-container.sh install.sh .dockerignore
+
 
 .PHONY: build-container build-container-nocache init-test build-container-test 
 .PHONY: configure build lint format test coverage sanitize 
@@ -47,11 +49,13 @@ help:
 	@echo "- add a new External Tool for make to run it automatically"
 	@echo "    - use either debug-playground-detached or debug-test-detached as make target"
 
-build-container:
+build-container: ${CONTAINERBUILDDEPENDENCIES}
 	docker build -t $(IMAGE) .
+}
 
-build-container-nocache:
+build-container-nocache: ${CONTAINERBUILDDEPENDENCIES}
 	docker build -t $(IMAGE) --no-cache .
+}
 
 init-test:
 	$(PROGRAM)
