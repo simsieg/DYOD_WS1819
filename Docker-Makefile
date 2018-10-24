@@ -43,7 +43,7 @@ help:
 	@echo "- build your target: 'make build'"
 	@echo "- run the tests: 'make test'"
 	@echo
-	@echo "* further manipulate your project using 'make lint|format|coverage|sanitize|debug|ssh'"
+	@echo "* further manipulate your project using 'make lint|format|coverage|sanitize|debug|shell'"
 	@echo
 	@echo "* to start a remote debugger, run: 'make debug-playground|debug-test'"
 	@echo
