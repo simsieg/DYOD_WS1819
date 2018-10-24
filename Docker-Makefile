@@ -1,5 +1,7 @@
 # https://github.com/Miroka96/docker-makefile
 
+# rename this file for convenience to 'Makefile'
+
 CONTAINERNAME := opossum
 NAME := hyrise/${CONTAINERNAME}
 TAG := 1.0
@@ -7,19 +9,13 @@ TAG := 1.0
 VOLUME := ${PWD}
 MOUNTPATH := /project
 
-#LOCALPORT = 8080
-#CONTAINERPORT = 80
-
 # if you want a special image name, edit this
 IMAGE := $(NAME):$(TAG)
 
 # if you have no volume, delete the right part
 VOLUMEMOUNTING := -v $(VOLUME):$(MOUNTPATH)
 
-# if you publish no ports, delete the right part
-PORTPUBLISHING := #-p $(LOCALPORT):$(CONTAINERPORT)
-
-PROGRAMRAW := docker run $(VOLUMEMOUNTING) $(PORTPUBLISHING) --rm
+PROGRAMRAW := docker run $(VOLUMEMOUNTING) --rm
 PROGRAM := $(PROGRAMRAW) $(IMAGE)
 DEBUGPROGRAMRAW := $(PROGRAMRAW) -p 127.0.0.1:7777:7777 -t --security-opt seccomp:unconfined --name ${CONTAINERNAME}
 DEBUGPROGRAM := ${DEBUGPROGRAMRAW} ${IMAGE} debug
