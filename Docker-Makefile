@@ -27,17 +27,23 @@ DEBUGNOTIFICATION := connect the debugger to ${REMOTEDEBUGTARGET}
 CONTAINERBUILDDEPENDENCIES := Dockerfile run-container.sh install.sh .dockerignore
 
 
-.PHONY: build-container build-container-nocache init-test build-container-test 
+.PHONY: build-container build-container-nocache init-test build-container-test init
 .PHONY: configure build lint format test coverage sanitize 
 .PHONY: debug-playground debug-playground-detached debug-test debug-test-detached 
 .PHONY: git-update ssh
 .PHONY: stop-container clean-container clean
 
 help:
-	@echo "* first build the container using 'make build-container'"
+	@echo "* initialize the whole environment: 'make init'"
+	@echo "  or use the following steps:"
+	@echo "- build the container using 'make build-container'"
 	@echo "  (takes around 15 minutes)"
+	@echo "- update the git-submodules: 'make git-update'"
+	@echo "- configure your build target (default: debug): 'make configure'"
+	@echo "- build your target: 'make build'"
+	@echo "- run the tests: 'make test'"
 	@echo
-	@echo "* manipulate your project using 'make configure|build|lint|format|test|coverage|sanitize|debug|git-update|ssh'"
+	@echo "* further manipulate your project using 'make lint|format|coverage|sanitize|debug|ssh'"
 	@echo
 	@echo "* to start a remote debugger, run: 'make debug-playground|debug-test'"
 	@echo
@@ -47,6 +53,9 @@ help:
 	@echo "- add as path mapping: remote=/project local=${PWD}"
 	@echo "- add a new External Tool for make to run it automatically"
 	@echo "    - use either debug-playground-detached or debug-test-detached as make target"
+	@echo
+	@echo "* get a shell inside the container: 'make shell'"
+	@echo "  be aware that all changes are lost afterwards"
 
 build-container: ${CONTAINERBUILDDEPENDENCIES}
 	docker build -t $(IMAGE) .
@@ -58,6 +67,8 @@ init-test:
 	$(PROGRAM)
 
 build-container-test: build-container init-test
+
+init: build-container-test git-update configure build test
 
 configure:
 	$(PROGRAM) configure
@@ -97,8 +108,8 @@ debug-test-detached: stop-container
 git-update:
 	$(PROGRAM) git-update
 
-ssh:
-	$(PROGRAM) ssh
+shell:
+	$(PROGRAMRAW) -it ${IMAGE} shell
 
 stop-container:
 	-docker stop $(CONTAINERNAME)

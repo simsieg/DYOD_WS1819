@@ -4,7 +4,7 @@ TARGET=debug
 BUILDDIR=cmake-build-${TARGET}
 
 if [[ -z $1 ]]; then
-    echo "Usage: $0 configure|build|lint|format|test|coverage|sanitize|debug|git-update|ssh"
+    echo "Usage: $0 configure|build|lint|format|test|coverage|sanitize|debug|git-update|shell"
     echo "Otherwise refer to the Makefile"
 else
     if [[ "$1" == "configure" ]]; then
@@ -55,8 +55,8 @@ else
         fi
     elif [[ "$1" == "git-update" ]]; then
         git submodule update --jobs 5 --init --recursive
-    elif [[ "$1" == "ssh" ]]; then
-        /usr/sbin/sshd -D
+    elif [[ "$1" == "shell" ]]; then
+        /bin/bash
     else
         echo "unknown command"
     fi
