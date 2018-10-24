@@ -34,11 +34,14 @@ CONTAINERBUILDDEPENDENCIES := Dockerfile run-container.sh install.sh .dockerigno
 .PHONY: stop-container clean-container clean
 
 help:
-	@echo "manipulate your project using 'make configure|build|lint|format|test|coverage|sanitize|debug|git-update|ssh'"
+	@echo "* first build the container using 'make build-container'"
+	@echo "  (takes around 15 minutes)"
 	@echo
-	@echo "to start a remote debugger, run: 'make debug-playground|debug-test'"
+	@echo "* manipulate your project using 'make configure|build|lint|format|test|coverage|sanitize|debug|git-update|ssh'"
 	@echo
-	@echo "to use the GDB Remote Debugger in CLION:"
+	@echo "* to start a remote debugger, run: 'make debug-playground|debug-test'"
+	@echo
+	@echo "* to use the GDB Remote Debugger in CLION:"
 	@echo "- create a new GDB Remote Debugger run configuration"
 	@echo "- set remote target to '${REMOTEDEBUGTARGET}'"
 	@echo "- add as path mapping: remote=/project local=${PWD}"
@@ -47,11 +50,9 @@ help:
 
 build-container: ${CONTAINERBUILDDEPENDENCIES}
 	docker build -t $(IMAGE) .
-}
 
 build-container-nocache: ${CONTAINERBUILDDEPENDENCIES}
 	docker build -t $(IMAGE) --no-cache .
-}
 
 init-test:
 	$(PROGRAM)
