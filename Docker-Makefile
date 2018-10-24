@@ -1,27 +1,51 @@
 # https://github.com/Miroka96/docker-makefile
 
-NAME = hyrise/opossum
-TAG = 1.0
+CONTAINERNAME := opossum
+NAME := hyrise/${CONTAINERNAME}
+TAG := 1.0
 
-VOLUME = ${PWD}
-MOUNTPATH = /project
+VOLUME := ${PWD}
+MOUNTPATH := /project
 
 #LOCALPORT = 8080
 #CONTAINERPORT = 80
 
 # if you want a special image name, edit this
-IMAGE = $(NAME):$(TAG)
+IMAGE := $(NAME):$(TAG)
 
 # if you have no volume, delete the right part
-VOLUMEMOUNTING = -v $(VOLUME):$(MOUNTPATH)
+VOLUMEMOUNTING := -v $(VOLUME):$(MOUNTPATH)
 
 # if you publish no ports, delete the right part
-PORTPUBLISHING = #-p $(LOCALPORT):$(CONTAINERPORT)
+PORTPUBLISHING := #-p $(LOCALPORT):$(CONTAINERPORT)
 
-PROGRAMRAW=docker run $(VOLUMEMOUNTING) $(PORTPUBLISHING) --rm
-PROGRAM=$(PROGRAMRAW) $(IMAGE)
+PROGRAMRAW := docker run $(VOLUMEMOUNTING) $(PORTPUBLISHING) --rm
+PROGRAM := $(PROGRAMRAW) $(IMAGE)
+DEBUGPROGRAMRAW := $(PROGRAMRAW) -p 127.0.0.1:7777:7777 -t --security-opt seccomp:unconfined --name ${CONTAINERNAME}
+DEBUGPROGRAM := ${DEBUGPROGRAMRAW} ${IMAGE} debug
+DEBUGPROGRAMDETACHED := ${DEBUGPROGRAMRAW} --detach ${IMAGE} debug
 
-.PHONY: build test test-shell build-test deploy build-deploy undeploy redeploy build-redeploy clean-volume clean-container clean install-dependencies configure
+REMOTEDEBUGTARGET := tcp:127.0.0.1:7777
+DEBUGNOTIFICATION := connect the debugger to ${REMOTEDEBUGTARGET}
+
+
+.PHONY: build-container build-container-nocache init-test build-container-test 
+.PHONY: configure build lint format test coverage sanitize 
+.PHONY: debug-playground debug-playground-detached debug-test debug-test-detached 
+.PHONY: git-update ssh
+.PHONY: stop-container clean-container clean
+
+help:
+	@echo "manipulate your project using 'make configure|build|lint|format|test|coverage|sanitize|debug|git-update|ssh'"
+	@echo
+	@echo "to start a remote debugger, run: 'make debug-playground|debug-test'"
+	@echo
+	@echo "to use the GDB Remote Debugger in CLION:"
+	@echo "- create a new GDB Remote Debugger run configuration"
+	@echo "- set remote target to '${REMOTEDEBUGTARGET}'"
+	@echo "- add as path mapping: remote=/project local=${PWD}"
+	@echo "- add a new External Tool for make to run it automatically"
+	@echo "    - use either debug-playground-detached or debug-test-detached as make target"
 
 build-container:
 	docker build -t $(IMAGE) .
@@ -33,12 +57,6 @@ init-test:
 	$(PROGRAM)
 
 build-container-test: build-container init-test
-
-hi:
-	set HI=hi >/dev/null
-
-echo: hi
-	echo $(HI)
 
 configure:
 	$(PROGRAM) configure
@@ -61,8 +79,19 @@ coverage:
 sanitize:
 	$(PROGRAM) sanitize
 
-debug:
-	$(PROGRAM) debug
+debug-playground: stop-container
+	${DEBUGPROGRAM} hyrisePlayground
+
+debug-playground-detached: stop-container
+	${DEBUGPROGRAMDETACHED} hyrisePlayground
+	@echo ${DEBUGNOTIFICATION}
+
+debug-test:
+	${DEBUGPROGRAM} hyriseTest
+
+debug-test-detached: stop-container
+	${DEBUGPROGRAMDETACHED} hyriseTest
+	@echo ${DEBUGNOTIFICATION}
 
 git-update:
 	$(PROGRAM) git-update
@@ -70,19 +99,10 @@ git-update:
 ssh:
 	$(PROGRAM) ssh
 
-deploy-container:
-	echo nothing to deploy yet
-
-build-container-deploy: build-container deploy-container
-
 stop-container:
-	-docker stop $(NAME)
+	-docker stop $(CONTAINERNAME)
 
 clean-container:
-	-docker rm $(NAME)
+	-docker rm $(CONTAINERNAME)
 
-undeploy-container: stop-container clean-container
-
-redeploy-container: undeploy-container deploy-container
-
-build-container-redeploy: build-container redeploy-container
+clean: stop-container clean-container
