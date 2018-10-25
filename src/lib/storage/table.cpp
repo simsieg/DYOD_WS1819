@@ -39,31 +39,25 @@ void Table::add_column(const std::string& name, const std::string& type) {
 void Table::append(std::vector<AllTypeVariant> values) {
   if (this->chunks.back()->size() >= this->max_chunk_size) {
     this->chunks.push_back(std::make_shared<Chunk>());
-    for (uint16_t i = 0; i < this->names.size(); i ++) {
-      this->chunks.back()->add_segment(
-        make_shared_by_data_type<BaseSegment, ValueSegment>(this->types[i])
-      );
+    for (uint16_t i = 0; i < this->names.size(); i++) {
+      this->chunks.back()->add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(this->types[i]));
     }
   }
   this->chunks.back()->append(values);
 }
 
-uint16_t Table::column_count() const {
-  return this->names.size();
-}
+uint16_t Table::column_count() const { return this->names.size(); }
 
 uint64_t Table::row_count() const {
   uint64_t count = 0;
   // vector.size() has constant complexity
-  for (uint64_t i = 0; i < this->chunks.size(); i ++) {
+  for (uint64_t i = 0; i < this->chunks.size(); i++) {
     count += this->chunks[i]->size();
   }
   return count;
 }
 
-ChunkID Table::chunk_count() const {
-  return ChunkID{(uint32_t)this->chunks.size()};
-}
+ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(this->chunks.size())}; }
 
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
   for (uint16_t i = 0; i < this->names.size(); i++) {
@@ -74,28 +68,16 @@ ColumnID Table::column_id_by_name(const std::string& column_name) const {
   throw std::runtime_error("Column does not exist");
 }
 
-uint32_t Table::chunk_size() const {
-  return this->max_chunk_size;
-}
+uint32_t Table::chunk_size() const { return this->max_chunk_size; }
 
-const std::vector<std::string>& Table::column_names() const {
-  return this->names;
-}
+const std::vector<std::string>& Table::column_names() const { return this->names; }
 
-const std::string& Table::column_name(ColumnID column_id) const {
-  return this->names[column_id];
-}
+const std::string& Table::column_name(ColumnID column_id) const { return this->names[column_id]; }
 
-const std::string& Table::column_type(ColumnID column_id) const {
-  return this->types[column_id];
-}
+const std::string& Table::column_type(ColumnID column_id) const { return this->types[column_id]; }
 
-Chunk& Table::get_chunk(ChunkID chunk_id) { 
-  return *this->chunks[chunk_id];
-}
+Chunk& Table::get_chunk(ChunkID chunk_id) { return *this->chunks[chunk_id]; }
 
-const Chunk& Table::get_chunk(ChunkID chunk_id) const { 
-  return *this->chunks[chunk_id];
-}
+const Chunk& Table::get_chunk(ChunkID chunk_id) const { return *this->chunks[chunk_id]; }
 
 }  // namespace opossum

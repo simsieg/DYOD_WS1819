@@ -80,6 +80,5 @@ class Table : private Noncopyable {
   std::vector<std::string> names;
   std::vector<std::string> types;
   std::vector<std::shared_ptr<Chunk>> chunks;
-
 };
 }  // namespace opossum
