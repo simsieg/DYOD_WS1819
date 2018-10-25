@@ -19,10 +19,8 @@ void Chunk::add_segment(std::shared_ptr<BaseSegment> segment) {
 }
 
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
-  if (values.size() != this->column_count()) {
-    throw std::runtime_error("Error: Incorrect number of columns");
-  }
-
+  DebugAssert(values.size() == this->column_count(), "Error: Incorrect number of columns");
+  
   for (int i = 0; i < this->column_count(); i++) {
     this->segments[i]->append(values[i]);
   }
