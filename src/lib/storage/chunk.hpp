@@ -46,7 +46,7 @@ class Chunk : private Noncopyable {
   std::shared_ptr<BaseSegment> get_segment(ColumnID column_id) const;
 
  protected:
-  // Implementation goes here
+  std::vector<std::shared_ptr<BaseSegment>> segments;
 };
 
 }  // namespace opossum
