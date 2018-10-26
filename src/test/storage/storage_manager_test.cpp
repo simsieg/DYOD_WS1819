@@ -35,7 +35,7 @@ namespace opossum {
 // }
 
 // TEST_F(StorageStorageManagerTest, ResetTable) {
-//   StorageManager::reset();
+//   StorageManager::get().reset();
 //   auto& sm = StorageManager::get();
 //   EXPECT_THROW(sm.get_table("first_table"), std::exception);
 // }
