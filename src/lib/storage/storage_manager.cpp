@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -9,39 +10,46 @@
 
 namespace opossum {
 
+std::shared_ptr<StorageManager> StorageManager::instance = NULL;
+
 StorageManager& StorageManager::get() {
-  return *(new StorageManager());
-  // A really hacky fix to get the tests to run - replace this with your implementation
+  static StorageManager instance;
+  return instance;
 }
 
-void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) {
-  // Implementation goes here
-}
+void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) { this->tables[name] = table; }
 
 void StorageManager::drop_table(const std::string& name) {
-  // Implementation goes here
+  auto result = this->tables.erase(name);
+  if (result == 0) {
+    throw std::runtime_error("Error: Table not found!");
+  }
 }
 
-std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const {
-  // Implementation goes here
-  return nullptr;
-}
+std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const { return this->tables.at(name); }
 
-bool StorageManager::has_table(const std::string& name) const {
-  // Implementation goes here
-  return false;
-}
+bool StorageManager::has_table(const std::string& name) const { return this->tables.count(name) != 0; }
 
 std::vector<std::string> StorageManager::table_names() const {
-  throw std::runtime_error("Implement StorageManager::table_names");
+  std::vector<std::string> keys;
+  for (auto entry : this->tables) {
+    keys.reserve(this->tables.size());
+    keys.push_back(entry.first);
+  }
+  return keys;
 }
 
 void StorageManager::print(std::ostream& out) const {
-  // Implementation goes here
+  out << "-----------------------------------------------" << std::endl
+      << "| Name | #Columns | #Rows | #Chunks |" << std::endl
+      << "-----------------------------------------------" << std::endl;
+  for (auto entry : this->tables) {
+    auto table = entry.second;
+    out << "| " << entry.first << " | " << table->column_count() << " | " << table->row_count() << " | "
+        << table->chunk_count() << " |" << std::endl;
+  }
+  out << "-----------------------------------------------" << std::endl;
 }
 
-void StorageManager::reset() {
-  // Implementation goes here;
-}
-
+void StorageManager::reset() { get() = StorageManager(); }
 }  // namespace opossum
