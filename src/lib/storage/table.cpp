@@ -28,7 +28,6 @@ Table::Table(const uint32_t chunk_size) {
 void Table::add_column(const std::string& name, const std::string& type) {
   this->names.push_back(name);
   this->types.push_back(type);
-
   if (this->chunks.front()->size() == 0) {
     this->chunks.back()->add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
   } else {
@@ -50,7 +49,6 @@ uint16_t Table::column_count() const { return this->names.size(); }
 
 uint64_t Table::row_count() const {
   uint64_t count = 0;
-  // vector.size() has constant complexity
   for (uint64_t i = 0; i < this->chunks.size(); i++) {
     count += this->chunks[i]->size();
   }

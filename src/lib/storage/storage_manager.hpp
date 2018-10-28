@@ -4,6 +4,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "storage/table.hpp"
@@ -44,7 +45,6 @@ class StorageManager : private Noncopyable {
   StorageManager() {}
   StorageManager& operator=(StorageManager&&) = default;
   static std::shared_ptr<StorageManager> instance;
-  std::vector<std::string> _table_names;
-  std::vector<std::shared_ptr<Table>> _table_contents;
+  std::unordered_map<std::string, std::shared_ptr<Table>> tables;
 };
 }  // namespace opossum

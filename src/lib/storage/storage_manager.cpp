@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -16,49 +17,35 @@ StorageManager& StorageManager::get() {
   return instance;
 }
 
-void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) {
-  this->_table_names.push_back(name);
-  this->_table_contents.push_back(table);
-}
+void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) { this->tables[name] = table; }
 
 void StorageManager::drop_table(const std::string& name) {
-  for (uint16_t i = 0; i < this->_table_names.size(); i++) {
-    if (this->_table_names[i].compare(name) == 0) {
-      this->_table_names.erase(this->_table_names.begin() + i);
-      this->_table_contents.erase(this->_table_contents.begin() + i);
-      return;
-    }
+  auto result = this->tables.erase(name);
+  if (result == 0) {
+    throw std::runtime_error("Error: Table not found!");
   }
-  throw std::runtime_error("Error: Table does not exist!");
 }
 
-std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const {
-  for (uint16_t i = 0; i < this->_table_names.size(); i++) {
-    if (this->_table_names[i].compare(name) == 0) {
-      return this->_table_contents[i];
-    }
-  }
-  throw std::runtime_error("Error: Table does not exist!");
-}
+std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const { return this->tables.at(name); }
 
-bool StorageManager::has_table(const std::string& name) const {
-  for (uint16_t i = 0; i < this->_table_names.size(); i++) {
-    if (this->_table_names[i].compare(name) == 0) {
-      return true;
-    }
-  }
-  return false;
-}
+bool StorageManager::has_table(const std::string& name) const { return this->tables.count(name) != 0; }
 
-std::vector<std::string> StorageManager::table_names() const { return this->_table_names; }
+std::vector<std::string> StorageManager::table_names() const {
+  std::vector<std::string> keys;
+  for (auto entry : this->tables) {
+    keys.reserve(this->tables.size());
+    keys.push_back(entry.first);
+  }
+  return keys;
+}
 
 void StorageManager::print(std::ostream& out) const {
   out << "-----------------------------------------------" << std::endl
       << "| Name | #Columns | #Rows | #Chunks |" << std::endl
       << "-----------------------------------------------" << std::endl;
-  for (uint16_t i = 0; i < this->_table_names.size(); i++) {
-    auto table = this->_table_contents[i];
-    out << "| " << _table_names[i] << " | " << table->column_count() << " | " << table->row_count() << " | "
+  for (auto entry : this->tables) {
+    auto table = entry.second;
+    out << "| " << entry.first << " | " << table->column_count() << " | " << table->row_count() << " | "
         << table->chunk_count() << " |" << std::endl;
   }
   out << "-----------------------------------------------" << std::endl;
