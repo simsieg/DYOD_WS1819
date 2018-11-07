@@ -31,13 +31,13 @@ class DictionarySegment : public BaseSegment {
   explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment) {
     // Cast to ValueSegment
     const auto value_segment = std::static_pointer_cast<ValueSegment<T>>(base_segment);
-    _dictionary = std::make_shared<std::vector<T>>(std::move(value_segment->values()));    
-    
+    _dictionary = std::make_shared<std::vector<T>>(std::move(value_segment->values()));
+
     // Init dictionary
     std::sort(_dictionary->begin(), _dictionary->end());
     const auto vector_iter = std::unique(_dictionary->begin(), _dictionary->end());
     _dictionary->erase(vector_iter, _dictionary->end());
-    
+
     // Init attribute vector
     _attribute_vector = std::make_shared<std::vector<uint32_t>>();
     for (const auto value : value_segment->values()) {
@@ -57,7 +57,7 @@ class DictionarySegment : public BaseSegment {
   // return the value at a certain position.
   const T get(const size_t i) const {
     const ValueID id = ValueID(_attribute_vector->at(i));
-    return _dictionary->at(id);  
+    return _dictionary->at(id);
     };
 
   // dictionary segments are immutable
@@ -72,7 +72,7 @@ class DictionarySegment : public BaseSegment {
 
   // returns an underlying data structure
   std::shared_ptr<const BaseAttributeVector> attribute_vector() const {
-    return _attribute_vector;
+    return type_cast<T>(_attribute_vector);
   };
 
   // return the value represented by a given ValueID
@@ -88,7 +88,7 @@ class DictionarySegment : public BaseSegment {
       return INVALID_VALUE_ID;
     }
     return ValueID(iterator - _dictionary->cend());
-  }; 
+  };
 
   // same as lower_bound(T), but accepts an AllTypeVariant
   ValueID lower_bound(const AllTypeVariant& value) const {
