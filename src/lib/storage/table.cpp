@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "value_segment.hpp"
+#include "dictionary_segment.hpp"
 
 #include "resolve_type.hpp"
 #include "types.hpp"
@@ -78,6 +79,23 @@ Chunk& Table::get_chunk(ChunkID chunk_id) { return *this->chunks[chunk_id]; }
 
 const Chunk& Table::get_chunk(ChunkID chunk_id) const { return *this->chunks[chunk_id]; }
 
-void Table::compress_chunk(ChunkID chunk_id) { throw std::runtime_error("Implement Table::compress_chunk"); }
+void Table::compress_chunk(ChunkID chunk_id) {
+  auto& uncompressed_chunk = chunks[chunk_id];
+  DebugAssert(uncompressed_chunk->size() < max_chunk_size, "Error: Chunk is not full");
+  const auto compressed_chunk = std::make_shared<Chunk>();
+
+  for (ColumnID index{0}; index < uncompressed_chunk->column_count(); index++) {
+    const auto type = column_type(index);
+    compressed_chunk->add_segment(
+      make_shared_by_data_type<BaseSegment, DictionarySegment>(
+        type,
+        uncompressed_chunk->get_segment(index)
+      )
+    );
+  }
+
+  // Mutex?
+  uncompressed_chunk = compressed_chunk;
+}
 
 }  // namespace opossum
