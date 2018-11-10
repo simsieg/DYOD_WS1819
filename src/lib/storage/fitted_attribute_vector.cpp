@@ -11,7 +11,7 @@ ValueID FittedAttributeVector<uintX_t>::get(const ChunkOffset i) const {
 
 template <typename uintX_t>
 void FittedAttributeVector<uintX_t>::set(const ChunkOffset i, const ValueID value_id) {
-  // TODO: Check and optimize
+  // TODO(mirko): Check and optimize
   _value_references[i] = value_id;
 }
 

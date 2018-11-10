@@ -79,4 +79,49 @@ TEST_F(StorageDictionarySegmentTest, LowerUpperBound) {
   EXPECT_EQ(dict_col->upper_bound(15), opossum::INVALID_VALUE_ID);
 }
 
+TEST_F(StorageDictionarySegmentTest, AppendElements) {
+  vc_str->append("Bill");
+
+  auto col = opossum::make_shared_by_data_type<opossum::BaseSegment, opossum::DictionarySegment>("string", vc_str);
+  auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<std::string>>(col);
+
+  // Test appending new element
+  EXPECT_ANY_THROW(dict_col->append("Steve"));
+}
+
+TEST_F(StorageDictionarySegmentTest, GetElements) {
+  vc_str->append("Bill");
+  vc_str->append("Steve");
+  vc_str->append("Alexander");
+  vc_str->append("Steve");
+  vc_str->append("Hasso");
+  vc_str->append("Bill");
+
+  auto col = opossum::make_shared_by_data_type<opossum::BaseSegment, opossum::DictionarySegment>("string", vc_str);
+  auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<std::string>>(col);
+
+  // Test getting elements
+  EXPECT_EQ(dict_col->get(0), "Bill");
+  EXPECT_EQ(dict_col->get(1), "Steve");
+  EXPECT_EQ(dict_col->get(3), "Steve");
+  EXPECT_ANY_THROW(dict_col->get(6));
+}
+
+TEST_F(StorageDictionarySegmentTest, DictionaryEncoding) {
+  vc_str->append("Bill");
+  vc_str->append("Steve");
+  vc_str->append("Alexander");
+  vc_str->append("Steve");
+  vc_str->append("Bill");
+
+  auto col = opossum::make_shared_by_data_type<opossum::BaseSegment, opossum::DictionarySegment>("string", vc_str);
+  auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<std::string>>(col);
+
+  // Test getting elements
+  EXPECT_EQ(dict_col->value_by_value_id(opossum::ValueID(0)), "Alexander");
+  EXPECT_EQ(dict_col->value_by_value_id(opossum::ValueID(1)), "Bill");
+  EXPECT_EQ(dict_col->value_by_value_id(opossum::ValueID(2)), "Steve");
+  EXPECT_ANY_THROW(dict_col->value_by_value_id(opossum::ValueID(3)));
+}
+
 // TODO(student): You should add some more tests here (full coverage would be appreciated) and possibly in other files.

@@ -88,7 +88,7 @@ const Chunk& Table::get_chunk(ChunkID chunk_id) const { return *_chunks[chunk_id
 
 void Table::compress_chunk(ChunkID chunk_id) {
   auto& uncompressed_chunk = _chunks[chunk_id];
-  DebugAssert(uncompressed_chunk->size() < _max_chunk_size, "Error: Chunk is not full");
+  DebugAssert(uncompressed_chunk->size() >= _max_chunk_size, "Error: Chunk is not full");
   const auto compressed_chunk = std::make_shared<Chunk>();
 
   for (ColumnID column_id{0}; column_id < uncompressed_chunk->column_count(); column_id++) {
