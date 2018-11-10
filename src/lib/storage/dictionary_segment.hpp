@@ -80,7 +80,7 @@ class DictionarySegment : public BaseSegment {
     if (iterator == _dictionary->cend()) {
       return INVALID_VALUE_ID;
     }
-    return ValueID(iterator - _dictionary->cend());
+    return ValueID(iterator - _dictionary->cbegin());
   }
 
   // same as lower_bound(T), but accepts an AllTypeVariant
@@ -93,7 +93,7 @@ class DictionarySegment : public BaseSegment {
     if (iterator == _dictionary->cend()) {
       return INVALID_VALUE_ID;
     }
-    return ValueID(iterator - _dictionary->cend());
+    return ValueID(iterator - _dictionary->cbegin());
   }
 
   // same as upper_bound(T), but accepts an AllTypeVariant
