@@ -6,6 +6,7 @@
 #include "../../lib/resolve_type.hpp"
 #include "../../lib/storage/base_segment.hpp"
 #include "../../lib/storage/dictionary_segment.hpp"
+#include "../../lib/storage/fitted_attribute_vector.cpp"
 #include "../../lib/storage/value_segment.hpp"
 
 class StorageDictionarySegmentTest : public ::testing::Test {
@@ -15,31 +16,6 @@ class StorageDictionarySegmentTest : public ::testing::Test {
 };
 
 TEST_F(StorageDictionarySegmentTest, CompressSegmentString) {
-  vc_str->append("Bill");
-  vc_str->append("Steve");
-  vc_str->append("Alexander");
-  vc_str->append("Steve");
-  vc_str->append("Hasso");
-  vc_str->append("Bill");
-
-  auto col = opossum::make_shared_by_data_type<opossum::BaseSegment, opossum::DictionarySegment>("string", vc_str);
-  auto dict_col = std::dynamic_pointer_cast<opossum::DictionarySegment<std::string>>(col);
-
-  // Test attribute_vector size
-  EXPECT_EQ(dict_col->size(), 6u);
-
-  // Test dictionary size (uniqueness)
-  EXPECT_EQ(dict_col->unique_values_count(), 4u);
-
-  // Test sorting
-  auto dict = dict_col->dictionary();
-  EXPECT_EQ((*dict)[0], "Alexander");
-  EXPECT_EQ((*dict)[1], "Bill");
-  EXPECT_EQ((*dict)[2], "Hasso");
-  EXPECT_EQ((*dict)[3], "Steve");
-}
-
-TEST_F(StorageDictionarySegmentTest, CantCompressEmpty) {
   vc_str->append("Bill");
   vc_str->append("Steve");
   vc_str->append("Alexander");

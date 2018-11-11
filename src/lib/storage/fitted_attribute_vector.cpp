@@ -5,14 +5,13 @@
 namespace opossum {
 
 template <typename uintX_t>
-ValueID FittedAttributeVector<uintX_t>::get(const ChunkOffset i) const {
+ValueID FittedAttributeVector<uintX_t>::get(const size_t i) const {
   return ValueID(_value_references.at(i));
 }
 
 template <typename uintX_t>
-void FittedAttributeVector<uintX_t>::set(const ChunkOffset i, const ValueID value_id) {
-  // TODO(mirko): Check and optimize
-  _value_references[i] = value_id;
+void FittedAttributeVector<uintX_t>::set(const size_t i, const ValueID value_id) {
+  _value_references.insert(_value_references.begin() + i, value_id);
 }
 
 template <typename uintX_t>

@@ -7,6 +7,7 @@
 #include <utility>
 #include <vector>
 
+#include "fitted_attribute_vector.hpp"
 #include "value_segment.hpp"
 
 #include "all_type_variant.hpp"
@@ -32,18 +33,29 @@ class DictionarySegment : public BaseSegment {
   explicit DictionarySegment(const std::shared_ptr<BaseSegment>& base_segment) {
     // Cast to ValueSegment
     const auto value_segment = std::static_pointer_cast<ValueSegment<T>>(base_segment);
-    _dictionary = std::make_shared<std::vector<T>>(std::move(value_segment->values()));
+    const auto rows = value_segment->size();
+    DebugAssert(rows <= UINT64_MAX, "Segment is too big to compress");
 
     // Init dictionary
+    _dictionary = std::make_shared<std::vector<T>>(std::move(value_segment->values()));
     std::sort(_dictionary->begin(), _dictionary->end());
     const auto vector_iter = std::unique(_dictionary->begin(), _dictionary->end());
     _dictionary->erase(vector_iter, _dictionary->end());
 
     // Init attribute vector
-    _attribute_vector = std::make_shared<std::vector<uint32_t>>();
+    if (rows <= UINT8_MAX) {
+      _attribute_vector = std::make_shared<FittedAttributeVector<uint8_t>>();
+    } else if (rows <= UINT16_MAX) {
+      _attribute_vector = std::make_shared<FittedAttributeVector<uint16_t>>();
+    } else if (rows <= UINT32_MAX) {
+      _attribute_vector = std::make_shared<FittedAttributeVector<uint32_t>>();
+    } else {
+      _attribute_vector = std::make_shared<FittedAttributeVector<uint64_t>>();
+    }
+    size_t row = 0;
     for (const auto value : value_segment->values()) {
       const auto index = std::find(_dictionary->begin(), _dictionary->end(), value);
-      _attribute_vector->push_back(index - _dictionary->begin());
+      _attribute_vector->set(row++, ValueID(index - _dictionary->begin()));
     }
   }
   // SEMINAR INFORMATION: Since most of these methods depend on the template parameter, you will have to implement
@@ -51,13 +63,13 @@ class DictionarySegment : public BaseSegment {
 
   // return the value at a certain position. If you want to write efficient operators, back off!
   const AllTypeVariant operator[](const size_t i) const override {
-    const ValueID id = ValueID(_attribute_vector->at(i));
+    const ValueID id = ValueID(_attribute_vector->get(i));
     return _dictionary->at(id);
   }
 
   // return the value at a certain position.
   const T get(const size_t i) const {
-    const ValueID id = ValueID(_attribute_vector->at(i));
+    const ValueID id = ValueID(_attribute_vector->get(i));
     return _dictionary->at(id);
   }
 
@@ -68,7 +80,7 @@ class DictionarySegment : public BaseSegment {
   std::shared_ptr<const std::vector<T>> dictionary() const { return _dictionary; }
 
   // returns an underlying data structure
-  std::shared_ptr<const BaseAttributeVector> attribute_vector() const { return type_cast<T>(_attribute_vector); }
+  std::shared_ptr<const BaseAttributeVector> attribute_vector() const { return _attribute_vector; }
 
   // return the value represented by a given ValueID
   const T& value_by_value_id(ValueID value_id) const { return _dictionary->at(value_id); }
@@ -107,7 +119,7 @@ class DictionarySegment : public BaseSegment {
 
  protected:
   std::shared_ptr<std::vector<T>> _dictionary;
-  std::shared_ptr<std::vector<uint32_t>> _attribute_vector;
+  std::shared_ptr<BaseAttributeVector> _attribute_vector;
 };
 
 }  // namespace opossum
