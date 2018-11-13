@@ -28,6 +28,8 @@ class FittedAttributeVector : public BaseAttributeVector {
 
   void reserve(const size_t expected_element_count) override;
 
+  void append(const ValueID value_id) override;
+
  protected:
   std::vector<uintX_t> _value_references;
 };

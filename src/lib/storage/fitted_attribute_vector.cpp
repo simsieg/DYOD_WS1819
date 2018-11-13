@@ -31,4 +31,10 @@ template <typename uintX_t>
 void FittedAttributeVector<uintX_t>::reserve(const size_t expected_element_count) {
   _value_references.reserve(expected_element_count);
 }
+
+template <typename uintX_t>
+void FittedAttributeVector<uintX_t>::append(const ValueID value_id) {
+  _value_references.push_back(value_id);
+}
+
 }  // namespace opossum

@@ -29,5 +29,7 @@ class BaseAttributeVector : private Noncopyable {
   virtual AttributeVectorWidth width() const = 0;
 
   virtual void reserve(size_t row_count) = 0;
+
+  virtual void append(const ValueID value_id) = 0;
 };
 }  // namespace opossum
