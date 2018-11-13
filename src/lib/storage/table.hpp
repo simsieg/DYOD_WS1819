@@ -48,7 +48,7 @@ class Table : private Noncopyable {
   const Chunk& get_chunk(ChunkID chunk_id) const;
 
   // Adds a chunk to the table. If the first chunk is empty, it is replaced.
-  void emplace_chunk(Chunk chunk);
+  void emplace_chunk(Chunk& chunk);
 
   // Returns a list of all column names.
   const std::vector<std::string>& column_names() const;
@@ -81,8 +81,10 @@ class Table : private Noncopyable {
 
  protected:
   uint32_t _max_chunk_size;
-  std::vector<std::string> _names;
-  std::vector<std::string> _types;
+  std::vector<std::string> _column_names;
+  std::vector<std::string> _column_types;
   std::vector<std::shared_ptr<Chunk>> _chunks;
+
+  std::shared_ptr<Chunk>& _lock_chunk_for_compression(ChunkID chunk_id);
 };
 }  // namespace opossum

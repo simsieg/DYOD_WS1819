@@ -39,4 +39,8 @@ uint32_t Chunk::size() const {
   return 0;
 }
 
+bool Chunk::compression_started() const { return _compression_started; }
+
+void Chunk::set_compression_start() { _compression_started = true; }
+
 }  // namespace opossum

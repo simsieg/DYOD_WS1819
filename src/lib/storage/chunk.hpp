@@ -45,8 +45,13 @@ class Chunk : private Noncopyable {
   // Returns the segment at a given position
   std::shared_ptr<BaseSegment> get_segment(ColumnID column_id) const;
 
+  bool compression_started() const;
+
+  void set_compression_start();
+
  protected:
   std::vector<std::shared_ptr<BaseSegment>> _segments;
+  bool _compression_started = false;
 };
 
 }  // namespace opossum
