@@ -21,11 +21,11 @@ void Chunk::append(const std::vector<AllTypeVariant>& values) {
 
   auto value_iter = values.cbegin();
   std::for_each(_segments.begin(), _segments.end(),
-          [&value_iter](const auto& segment){segment->append(*value_iter++); });
-// please decide, which code seems nicer:
-//  for (uint16_t index = 0; index < column_count(); index++) {
-//    _segments[index]->append(values[index]);
-//  }
+                [&value_iter](const auto& segment) { segment->append(*value_iter++); });
+  // please decide, which code seems nicer:
+  //  for (uint16_t index = 0; index < column_count(); index++) {
+  //    _segments[index]->append(values[index]);
+  //  }
 }
 
 std::shared_ptr<BaseSegment> Chunk::get_segment(ColumnID column_id) const { return _segments[column_id]; }

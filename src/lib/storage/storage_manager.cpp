@@ -1,5 +1,6 @@
 #include "storage_manager.hpp"
 
+#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -32,7 +33,7 @@ std::vector<std::string> StorageManager::table_names() const {
   names.reserve(_tables.size());
 
   std::transform(_tables.cbegin(), _tables.cend(), std::back_inserter(names),
-          [](auto const& tables_map_entry){ return tables_map_entry.first; });
+                 [](auto const& tables_map_entry) { return tables_map_entry.first; });
 
   return names;
 }
@@ -44,11 +45,10 @@ void StorageManager::print(std::ostream& out) const {
       << "-----------------------------------------------" << std::endl;
 
   // content
-  std::for_each( _tables.cbegin(), _tables.cend(),
-          [&out](auto const& tables_map_entry) {
-            auto table = tables_map_entry.second;
-            out << "| " << tables_map_entry.first << " | " << table->column_count() << " | "
-            << table->row_count() << " | " << table->chunk_count() << " |" << std::endl;
+  std::for_each(_tables.cbegin(), _tables.cend(), [&out](auto const& tables_map_entry) {
+    auto table = tables_map_entry.second;
+    out << "| " << tables_map_entry.first << " | " << table->column_count() << " | " << table->row_count() << " | "
+        << table->chunk_count() << " |" << std::endl;
   });
 
   // footer

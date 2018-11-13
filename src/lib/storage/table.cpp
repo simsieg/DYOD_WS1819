@@ -20,7 +20,6 @@ namespace opossum {
 
 std::mutex chunks_mutex;
 
-
 Table::Table(const uint32_t chunk_size) {
   _max_chunk_size = chunk_size;
   _chunks.push_back(std::make_shared<Chunk>());
@@ -41,9 +40,8 @@ void Table::append(std::vector<AllTypeVariant> values) {
   if (_chunks.back()->size() >= _max_chunk_size) {
     // latest chunk is full
     const auto new_chunk = std::make_shared<Chunk>();
-    for(const auto& type : _column_types) {
-      new_chunk->add_segment(
-              make_shared_by_data_type<BaseSegment, ValueSegment>(type));
+    for (const auto& type : _column_types) {
+      new_chunk->add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
     }
 
     _chunks.push_back(std::move(new_chunk));
@@ -59,21 +57,18 @@ uint64_t Table::row_count() const {
   return (_chunks.size() - 1) * _max_chunk_size + _chunks.back()->size();
 
   // counting solution for later
-//  uint64_t count = 0;
-//  for (uint64_t i = 0; i < _chunks.size(); i++) {
-//    count += _chunks[i]->size();
-//  }
-//  return count;
+  //  uint64_t count = 0;
+  //  for (uint64_t i = 0; i < _chunks.size(); i++) {
+  //    count += _chunks[i]->size();
+  //  }
+  //  return count;
 }
 
 ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
 
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
-  auto const search_iter = std::find(
-          _column_names.cbegin(),
-          _column_names.cend(),
-          column_name);
-  DebugAssert( search_iter != _column_names.cend(), "Column does not exist");
+  auto const search_iter = std::find(_column_names.cbegin(), _column_names.cend(), column_name);
+  DebugAssert(search_iter != _column_names.cend(), "Column does not exist");
 
   return ColumnID(std::distance(_column_names.cbegin(), search_iter));
 }
@@ -98,9 +93,7 @@ void Table::compress_chunk(ChunkID chunk_id) {
   for (ColumnID column_id{0}; column_id < uncompressed_chunk->column_count(); column_id++) {
     const auto type = column_type(column_id);
     compressed_chunk->add_segment(
-        make_shared_by_data_type<BaseSegment, DictionarySegment>(
-                type,
-                uncompressed_chunk->get_segment(column_id)));
+        make_shared_by_data_type<BaseSegment, DictionarySegment>(type, uncompressed_chunk->get_segment(column_id)));
   }
 
   // no mutex needed - operation is atomic
@@ -113,8 +106,8 @@ std::shared_ptr<Chunk>& Table::_lock_chunk_for_compression(ChunkID chunk_id) {
 
   auto& uncompressed_chunk = _chunks[chunk_id];
 
-  DebugAssert( uncompressed_chunk->size() >= _max_chunk_size, "Chunk is not full");
-  DebugAssert( ! uncompressed_chunk->compression_started(), "Chunk is already getting compressed");
+  DebugAssert(uncompressed_chunk->size() >= _max_chunk_size, "Chunk is not full");
+  DebugAssert(!uncompressed_chunk->compression_started(), "Chunk is already getting compressed");
   uncompressed_chunk->set_compression_start();
 
   return uncompressed_chunk;
