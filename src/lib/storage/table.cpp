@@ -69,12 +69,13 @@ uint64_t Table::row_count() const {
 ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
 
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
-  for (ColumnID column_id{0}; column_id < _column_names.size(); column_id++) {
-    if (_column_names[column_id] == column_name) {
-      return column_id;
-    }
-  }
-  throw std::runtime_error("Column does not exist");
+  auto const search_iter = std::find(
+          _column_names.cbegin(),
+          _column_names.cend(),
+          column_name);
+  DebugAssert( search_iter != _column_names.cend(), "Column does not exist");
+
+  return ColumnID(std::distance(_column_names.cbegin(), search_iter));
 }
 
 uint32_t Table::chunk_size() const { return _max_chunk_size; }
@@ -97,7 +98,9 @@ void Table::compress_chunk(ChunkID chunk_id) {
   for (ColumnID column_id{0}; column_id < uncompressed_chunk->column_count(); column_id++) {
     const auto type = column_type(column_id);
     compressed_chunk->add_segment(
-        make_shared_by_data_type<BaseSegment, DictionarySegment>(type, uncompressed_chunk->get_segment(column_id)));
+        make_shared_by_data_type<BaseSegment, DictionarySegment>(
+                type,
+                uncompressed_chunk->get_segment(column_id)));
   }
 
   // no mutex needed - operation is atomic
