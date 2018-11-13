@@ -48,7 +48,7 @@ class Table : private Noncopyable {
   const Chunk& get_chunk(ChunkID chunk_id) const;
 
   // Adds a chunk to the table. If the first chunk is empty, it is replaced.
-  void emplace_chunk(Chunk chunk);
+  void emplace_chunk(Chunk& chunk);
 
   // Returns a list of all column names.
   const std::vector<std::string>& column_names() const;
@@ -68,17 +68,23 @@ class Table : private Noncopyable {
   uint32_t chunk_size() const;
 
   // adds a column to the end, i.e., right, of the table
-  // the added column should have the same length as existing columns (if any)
+  // this can only be done if the table does not yet have any entries, because we would otherwise have to deal
+  // with default values
   void add_column(const std::string& name, const std::string& type);
 
   // inserts a row at the end of the table
   // note this is slow and not thread-safe and should be used for testing purposes only
   void append(std::vector<AllTypeVariant> values);
 
+  // compresses a ValueColumn into a DictionaryColumn
+  void compress_chunk(ChunkID chunk_id);
+
  protected:
-  uint32_t max_chunk_size;
-  std::vector<std::string> names;
-  std::vector<std::string> types;
-  std::vector<std::shared_ptr<Chunk>> chunks;
+  uint32_t _max_chunk_size;
+  std::vector<std::string> _column_names;
+  std::vector<std::string> _column_types;
+  std::vector<std::shared_ptr<Chunk>> _chunks;
+
+  std::shared_ptr<Chunk>& _lock_chunk_for_compression(ChunkID chunk_id);
 };
 }  // namespace opossum
