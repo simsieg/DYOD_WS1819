@@ -17,7 +17,7 @@ namespace opossum {
 void Chunk::add_segment(std::shared_ptr<BaseSegment> segment) { _segments.push_back(segment); }
 
 void Chunk::append(const std::vector<AllTypeVariant>& values) {
-  DebugAssert(values.size() == column_count(), "Error: Incorrect number of columns");
+  DebugAssert(values.size() == column_count(), "Incorrect number of columns");
 
   auto value_iter = values.cbegin();
   std::for_each(_segments.begin(), _segments.end(),

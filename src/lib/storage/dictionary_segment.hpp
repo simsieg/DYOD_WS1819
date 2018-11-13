@@ -7,12 +7,11 @@
 #include <utility>
 #include <vector>
 
-#include "fitted_attribute_vector.hpp"
-#include "value_segment.hpp"
-
 #include "all_type_variant.hpp"
+#include "fitted_attribute_vector.hpp"
 #include "type_cast.hpp"
 #include "types.hpp"
+#include "value_segment.hpp"
 
 namespace opossum {
 
@@ -58,8 +57,7 @@ class DictionarySegment : public BaseSegment {
       _attribute_vector->set(row++, ValueID(index - _dictionary->begin()));
     }
   }
-  // SEMINAR INFORMATION: Since most of these methods depend on the template parameter, you will have to implement
-  // the DictionarySegment in this file. Replace the method signatures with actual implementations.
+  // Since most of these methods depend on the template parameter, they need to be implemented in this file
 
   // return the value at a certain position. If you want to write efficient operators, back off!
   const AllTypeVariant operator[](const size_t i) const override {
