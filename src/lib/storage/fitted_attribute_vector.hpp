@@ -26,6 +26,10 @@ class FittedAttributeVector : public BaseAttributeVector {
   // returns the width of the values in bytes
   AttributeVectorWidth width() const override;
 
+  void reserve(const size_t expected_element_count) override;
+
+  void append(const ValueID value_id) override;
+
  protected:
   std::vector<uintX_t> _value_references;
 };

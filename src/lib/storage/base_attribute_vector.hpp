@@ -27,5 +27,9 @@ class BaseAttributeVector : private Noncopyable {
 
   // returns the width of biggest value id in bytes
   virtual AttributeVectorWidth width() const = 0;
+
+  virtual void reserve(size_t row_count) = 0;
+
+  virtual void append(const ValueID value_id) = 0;
 };
 }  // namespace opossum
