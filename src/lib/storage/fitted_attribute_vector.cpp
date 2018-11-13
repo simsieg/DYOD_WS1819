@@ -1,6 +1,8 @@
+#include <limits>
+
 #include "fitted_attribute_vector.hpp"
 
-#include <limits>
+#include "utils/assert.hpp"
 
 namespace opossum {
 
@@ -11,6 +13,7 @@ ValueID FittedAttributeVector<uintX_t>::get(const size_t element) const {
 
 template <typename uintX_t>
 void FittedAttributeVector<uintX_t>::set(const size_t element, const ValueID value_id) {
+  DebugAssert(element < std::pow(2, (8 * width())), "Index out of bounds exception");
   _value_references.insert(_value_references.begin() + element, value_id);
 }
 

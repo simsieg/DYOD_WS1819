@@ -43,4 +43,18 @@ TEST_F(FittedAttributeVectorTest, BasicSetGet) {
   EXPECT_EQ(test_vector64->get(0), 20u);
 }
 
+TEST_F(FittedAttributeVectorTest, InsertSize) {
+  EXPECT_NO_THROW(test_vector8->set(0, ValueID(20)));
+  for (auto iterator = 0; iterator < UINT8_MAX; iterator++) {
+    EXPECT_NO_THROW(test_vector8->set(iterator, ValueID(20)));
+  }
+  EXPECT_THROW(test_vector8->set(UINT8_MAX + 1, ValueID(20)), std::exception);
+
+  EXPECT_NO_THROW(test_vector16->set(0, ValueID(20)));
+  for (auto iterator = 0; iterator < UINT16_MAX; iterator++) {
+    EXPECT_NO_THROW(test_vector16->set(iterator, ValueID(20)));
+  }
+  EXPECT_THROW(test_vector16->set(UINT16_MAX + 1, ValueID(20)), std::exception);
+}
+
 }  // namespace opossum
