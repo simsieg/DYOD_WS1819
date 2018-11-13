@@ -36,11 +36,10 @@ class DictionarySegment : public BaseSegment {
     _dictionary_vector = _create_dictionary(value_segment->values());
     _attribute_vector = _create_fittedattributevector(rows);
 
-    for (const auto& value : value_segment->values()) {
+    std::for_each(value_segment->values().cbegin(), value_segment->values().cend(), [&](const auto& value) {
       const auto search_iter = std::find(_dictionary_vector->cbegin(), _dictionary_vector->cend(), value);
-      _attribute_vector->append(ValueID(
-              std::distance(_dictionary_vector->cbegin(), search_iter)));
-    }
+      _attribute_vector->append(ValueID(std::distance(_dictionary_vector->cbegin(), search_iter)));
+    });
   }
   // Since most of these methods depend on the template parameter, they need to be implemented in this file
 
