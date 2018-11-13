@@ -15,10 +15,10 @@ class FittedAttributeVector : public BaseAttributeVector {
   ~FittedAttributeVector() = default;
 
   // returns the value at a given positon
-  ValueID get(const size_t i) const override;
+  ValueID get(const size_t element) const override;
 
   // sets the value_id at a given position
-  void set(const size_t i, const ValueID value_id) override;
+  void set(const size_t element, const ValueID value_id) override;
 
   // returns the number of values
   size_t size() const override;
