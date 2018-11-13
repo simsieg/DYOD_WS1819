@@ -26,4 +26,9 @@ template <typename uintX_t>
 AttributeVectorWidth FittedAttributeVector<uintX_t>::width() const {
   return AttributeVectorWidth(sizeof(uintX_t));
 }
+
+template <typename uintX_t>
+void FittedAttributeVector<uintX_t>::reserve(const size_t expected_element_count) {
+  _value_references.reserve(expected_element_count);
+}
 }  // namespace opossum

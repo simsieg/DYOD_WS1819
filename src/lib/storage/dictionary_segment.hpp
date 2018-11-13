@@ -40,7 +40,7 @@ class DictionarySegment : public BaseSegment {
     size_t row = 0;
     for (const auto& value : value_segment->values()) {
       const auto search_iter = std::find(_dictionary_vector->cbegin(), _dictionary_vector->cend(), value);
-      _attribute_vector->set(row++, ValueID(std::dist(_dictionary_vector->cbegin(), search_iter)));
+      _attribute_vector->set(row++, ValueID(std::distance(_dictionary_vector->cbegin(), search_iter)));
     }
   }
   // Since most of these methods depend on the template parameter, they need to be implemented in this file
@@ -116,16 +116,18 @@ class DictionarySegment : public BaseSegment {
   }
 
   std::shared_ptr<BaseAttributeVector> _create_fittedattributevector(size_t row_count) const {
+    std::shared_ptr<BaseAttributeVector> return_vector = nullptr;
     if (row_count <= UINT8_MAX) {
-      return std::make_shared<FittedAttributeVector<uint8_t>>();
+      return_vector = std::make_shared<FittedAttributeVector<uint8_t>>();
+    } else if (row_count <= UINT16_MAX) {
+      return_vector = std::make_shared<FittedAttributeVector<uint16_t>>();
+    } else if (row_count <= UINT32_MAX) {
+      return_vector = std::make_shared<FittedAttributeVector<uint32_t>>();
+    } else {
+      return_vector = std::make_shared<FittedAttributeVector<uint64_t>>();
     }
-    if (row_count <= UINT16_MAX) {
-      return std::make_shared<FittedAttributeVector<uint16_t>>();
-    }
-    if (row_count <= UINT32_MAX) {
-      return std::make_shared<FittedAttributeVector<uint32_t>>();
-    }
-    return std::make_shared<FittedAttributeVector<uint64_t>>();
+    return_vector->reserve(row_count);
+    return return_vector;
   }
 };
 
