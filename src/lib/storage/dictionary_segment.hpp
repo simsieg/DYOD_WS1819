@@ -51,8 +51,8 @@ class DictionarySegment : public BaseSegment {
   }
 
   // return the value at a certain position.
-  const T get(const size_t i) const {
-    const ValueID id = ValueID(_attribute_vector->get(i));
+  const T get(const size_t index) const {
+    const ValueID id = ValueID(_attribute_vector->get(index));
     return _dictionary_vector->at(id);
   }
 
