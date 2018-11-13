@@ -1,17 +1,20 @@
+#include <limits>
+
 #include "fitted_attribute_vector.hpp"
 
-#include <limits>
+#include "utils/assert.hpp"
 
 namespace opossum {
 
 template <typename uintX_t>
-ValueID FittedAttributeVector<uintX_t>::get(const size_t i) const {
-  return ValueID(_value_references.at(i));
+ValueID FittedAttributeVector<uintX_t>::get(const size_t element) const {
+  return ValueID(_value_references.at(element));
 }
 
 template <typename uintX_t>
-void FittedAttributeVector<uintX_t>::set(const size_t i, const ValueID value_id) {
-  _value_references.insert(_value_references.begin() + i, value_id);
+void FittedAttributeVector<uintX_t>::set(const size_t element, const ValueID value_id) {
+  DebugAssert(element < std::pow(2, (8 * width())), "Index out of bounds exception");
+  _value_references.insert(_value_references.begin() + element, value_id);
 }
 
 template <typename uintX_t>
@@ -23,8 +26,4 @@ template <typename uintX_t>
 AttributeVectorWidth FittedAttributeVector<uintX_t>::width() const {
   return AttributeVectorWidth(sizeof(uintX_t));
 }
-
-template class FittedAttributeVector<uint8_t>;
-template class FittedAttributeVector<uint16_t>;
-template class FittedAttributeVector<uint32_t>;
 }  // namespace opossum
