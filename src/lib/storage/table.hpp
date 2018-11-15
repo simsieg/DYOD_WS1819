@@ -67,6 +67,11 @@ class Table : private Noncopyable {
   // return the maximum chunk size (cannot exceed ChunkOffset (uint32_t))
   uint32_t chunk_size() const;
 
+  // adds column definition without creating the actual columns
+  // this is helpful when, e.g., an operator first creates the structure of the table
+  // and then adds chunk by chunk
+  void add_column_definition(const std::string& name, const std::string& type);
+
   // adds a column to the end, i.e., right, of the table
   // this can only be done if the table does not yet have any entries, because we would otherwise have to deal
   // with default values
@@ -76,7 +81,10 @@ class Table : private Noncopyable {
   // note this is slow and not thread-safe and should be used for testing purposes only
   void append(std::vector<AllTypeVariant> values);
 
-  // compresses a ValueColumn into a DictionaryColumn
+  // creates a new chunk and appends it
+  void create_new_chunk();
+
+  // compresses a ValueSegment into a DictionarySegment
   void compress_chunk(ChunkID chunk_id);
 
  protected:

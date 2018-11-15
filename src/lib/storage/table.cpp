@@ -113,4 +113,8 @@ std::shared_ptr<Chunk>& Table::_lock_chunk_for_compression(ChunkID chunk_id) {
   return uncompressed_chunk;
 }
 
+void emplace_chunk(Chunk chunk) {
+  // Implementation goes here
+}
+
 }  // namespace opossum
