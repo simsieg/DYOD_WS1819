@@ -36,7 +36,7 @@ class StorageManager : private Noncopyable {
   void print(std::ostream& out = std::cout) const;
 
   // deletes the entire StorageManager and creates a new one, used especially in tests
-  static void reset();
+  void reset();
 
   StorageManager(StorageManager&&) = delete;
 

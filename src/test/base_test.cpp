@@ -157,6 +157,6 @@ void BaseTest::_print_matrix(const BaseTest::Matrix& matrix) {
   return ::testing::AssertionSuccess();
 }
 
-BaseTest::~BaseTest() { StorageManager::reset(); }
+BaseTest::~BaseTest() { StorageManager::get().reset(); }
 
 }  // namespace opossum
