@@ -1,6 +1,5 @@
 #pragma once
 
-#include <limits>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -24,7 +23,7 @@ class Table : private Noncopyable {
  public:
   // creates a table
   // the parameter specifies the maximum chunk size, i.e., partition size
-  // default is the maximum chunk size minus 1. A table holds always at least one chunk
+  // default (0) is an unlimited size. A table holds always at least one chunk
   explicit Table(const uint32_t chunk_size = std::numeric_limits<ChunkOffset>::max() - 1);
 
   // we need to explicitly set the move constructor to default when
@@ -67,6 +66,11 @@ class Table : private Noncopyable {
   // return the maximum chunk size (cannot exceed ChunkOffset (uint32_t))
   uint32_t chunk_size() const;
 
+  // adds column definition without creating the actual columns
+  // this is helpful when, e.g., an operator first creates the structure of the table
+  // and then adds chunk by chunk
+  void add_column_definition(const std::string& name, const std::string& type);
+
   // adds a column to the end, i.e., right, of the table
   // this can only be done if the table does not yet have any entries, because we would otherwise have to deal
   // with default values
@@ -76,7 +80,10 @@ class Table : private Noncopyable {
   // note this is slow and not thread-safe and should be used for testing purposes only
   void append(std::vector<AllTypeVariant> values);
 
-  // compresses a ValueColumn into a DictionaryColumn
+  // creates a new chunk and appends it
+  void create_new_chunk();
+
+  // compresses a ValueSegment into a DictionarySegment
   void compress_chunk(ChunkID chunk_id);
 
  protected:
