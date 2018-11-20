@@ -5,6 +5,7 @@ set(
     resolve_type.hpp
     operators/abstract_operator.cpp
     operators/abstract_operator.hpp
+    operators/get_table.cpp
     operators/get_table.hpp
     operators/print.cpp
     operators/print.hpp
