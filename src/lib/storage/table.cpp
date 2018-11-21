@@ -54,14 +54,13 @@ uint16_t Table::column_count() const { return _column_names.size(); }
 
 uint64_t Table::row_count() const {
   // not sure, whether this calculation uses 32 or 64 bit
-  return (_chunks.size() - 1) * _max_chunk_size + _chunks.back()->size();
-
+  // return (_chunks.size() - 1) * _max_chunk_size + _chunks.back()->size();
   // counting solution for later
-  //  uint64_t count = 0;
-  //  for (uint64_t i = 0; i < _chunks.size(); i++) {
-  //    count += _chunks[i]->size();
-  //  }
-  //  return count;
+   uint64_t count = 0;
+   for (uint64_t i = 0; i < _chunks.size(); i++) {
+     count += _chunks[i]->size();
+   }
+   return count;
 }
 
 ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
@@ -69,7 +68,6 @@ ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunk
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
   auto const search_iter = std::find(_column_names.cbegin(), _column_names.cend(), column_name);
   DebugAssert(search_iter != _column_names.cend(), "Column does not exist");
-
   return ColumnID(std::distance(_column_names.cbegin(), search_iter));
 }
 
