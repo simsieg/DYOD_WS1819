@@ -56,11 +56,11 @@ uint64_t Table::row_count() const {
   // not sure, whether this calculation uses 32 or 64 bit
   // return (_chunks.size() - 1) * _max_chunk_size + _chunks.back()->size();
   // counting solution for later
-   uint64_t count = 0;
-   for (uint64_t i = 0; i < _chunks.size(); i++) {
-     count += _chunks[i]->size();
-   }
-   return count;
+  uint64_t count = 0;
+  for (uint64_t i = 0; i < _chunks.size(); i++) {
+    count += _chunks[i]->size();
+  }
+  return count;
 }
 
 ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunks.size())}; }
