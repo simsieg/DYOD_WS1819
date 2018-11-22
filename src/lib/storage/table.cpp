@@ -44,21 +44,18 @@ void Table::append(std::vector<AllTypeVariant> values) {
       new_chunk->add_segment(make_shared_by_data_type<BaseSegment, ValueSegment>(type));
     }
 
-    _chunks.push_back(std::move(new_chunk));
+    _chunks.push_back(new_chunk);
   }
 
   _chunks.back()->append(values);
 }
 
-uint16_t Table::column_count() const { return _column_names.size(); }
+uint16_t Table::column_count() const { return static_cast<uint16_t>(_column_names.size()); }
 
 uint64_t Table::row_count() const {
-  // not sure, whether this calculation uses 32 or 64 bit
-  // return (_chunks.size() - 1) * _max_chunk_size + _chunks.back()->size();
-  // counting solution for later
   uint64_t count = 0;
-  for (uint64_t i = 0; i < _chunks.size(); i++) {
-    count += _chunks[i]->size();
+  for (const auto& chunk : _chunks) {
+    count += chunk->size();
   }
   return count;
 }
@@ -68,7 +65,7 @@ ChunkID Table::chunk_count() const { return ChunkID{static_cast<uint32_t>(_chunk
 ColumnID Table::column_id_by_name(const std::string& column_name) const {
   auto const search_iter = std::find(_column_names.cbegin(), _column_names.cend(), column_name);
   DebugAssert(search_iter != _column_names.cend(), "Column does not exist");
-  return ColumnID(std::distance(_column_names.cbegin(), search_iter));
+  return ColumnID(static_cast<const uint16_t&>(std::distance(_column_names.cbegin(), search_iter)));
 }
 
 uint32_t Table::chunk_size() const { return _max_chunk_size; }
@@ -104,7 +101,10 @@ std::shared_ptr<Chunk>& Table::_lock_chunk_for_compression(ChunkID chunk_id) {
 
   auto& uncompressed_chunk = _chunks[chunk_id];
 
+  // checks are delayed until here to get advantage of the locked mutex to prevent race conditions
   DebugAssert(uncompressed_chunk->size() >= _max_chunk_size, "Chunk is not full");
+
+  // could be set to Assert, but, anyway, hurting this assert only results in worse performance, not an error
   DebugAssert(!uncompressed_chunk->compression_started(), "Chunk is already getting compressed");
   uncompressed_chunk->set_compression_start();
 
