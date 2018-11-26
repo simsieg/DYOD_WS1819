@@ -61,18 +61,6 @@ void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<
 }
 
 template <typename T>
-void TableScan::TableScanImpl<T>::_store_chunk_references(std::shared_ptr<const Table> result_table,
-                                                          const std::shared_ptr<const Table> referenced_table,
-                                                          const std::shared_ptr<PosList> pos_list) {
-  Chunk chunk;
-  for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
-    // Create a reference segment for every segment with the current chunk pos list
-    chunk.add_segment(std::make_shared<ReferenceSegment>(referenced_table, column_id, pos_list));
-  }
-  // result_table->emplace_chunk(chunk); TODO(all): Implement emplace_chunk function in table.cpp
-}
-
-template <typename T>
 std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
   // Prepare result table
   const auto result_table = std::make_shared<Table>();
@@ -89,21 +77,39 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
     const auto reference_segment = std::dynamic_pointer_cast<ReferenceSegment>(segment);
     if (reference_segment != nullptr) {
       _scan_reference_segment(reference_segment, _search_value, chunk_pos_list);
-      _store_chunk_references(result_table, reference_segment->referenced_table(), chunk_pos_list);
+      Chunk chunk;
+      for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
+        // Create a reference segment for every segment with the current chunk pos list
+        chunk.add_segment(
+            std::make_shared<ReferenceSegment>(reference_segment->referenced_table(), column_id, chunk_pos_list));
+      }
+      result_table->emplace_chunk(std::move(chunk));
       continue;
     }
 
     const auto dictionary_segment = std::dynamic_pointer_cast<DictionarySegment<T>>(segment);
     if (dictionary_segment != nullptr) {
       _scan_dictionary_segment(dictionary_segment, _search_value, chunk_pos_list);
-      _store_chunk_references(result_table, _table, chunk_pos_list);
+      Chunk chunk;
+      for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
+        // Create a reference segment for every segment with the current chunk pos list
+        chunk.add_segment(
+            std::make_shared<ReferenceSegment>(reference_segment->referenced_table(), column_id, chunk_pos_list));
+      }
+      result_table->emplace_chunk(std::move(chunk));
       continue;
     }
 
     const auto value_segment = std::dynamic_pointer_cast<ValueSegment<T>>(segment);
     if (value_segment != nullptr) {
       _scan_value_segment(value_segment, _search_value, chunk_pos_list);
-      _store_chunk_references(result_table, _table, chunk_pos_list);
+      Chunk chunk;
+      for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
+        // Create a reference segment for every segment with the current chunk pos list
+        chunk.add_segment(
+            std::make_shared<ReferenceSegment>(reference_segment->referenced_table(), column_id, chunk_pos_list));
+      }
+      result_table->emplace_chunk(std::move(chunk));
       continue;
     }
 

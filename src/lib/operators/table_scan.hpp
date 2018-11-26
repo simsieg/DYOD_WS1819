@@ -59,9 +59,6 @@ class TableScan : public AbstractOperator {
                              const std::shared_ptr<PosList> pos_list);
     void _scan_dictionary_segment(const std::shared_ptr<DictionarySegment<T>> segment, const T search_value,
                                   const std::shared_ptr<PosList> pos_list);
-    void _store_chunk_references(const std::shared_ptr<const Table> table,
-                                 const std::shared_ptr<const Table> referenced_table,
-                                 const std::shared_ptr<PosList> pos_list);
   };
 };
 
