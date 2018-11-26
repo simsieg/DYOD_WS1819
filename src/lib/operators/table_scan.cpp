@@ -119,31 +119,35 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
   return result_table;
 }
 
-/*
-TODO(all): Implement a comparator function dispatcher
-auto comparator = [](T value, T search_value) { return value == search_value; };
-  switch (_scan_type) {
+template <typename T>
+bool _dispatched_comparator(ScanType scan_type, T& value, T& search_value) {
+  switch (scan_type) {
     case ScanType::OpEquals: {
-      comparator = [](T value, T search_value) { return value == search_value; }; break;
+      return value == search_value;
+      break;
     }
     case ScanType::OpNotEquals: {
-      comparator = [](T value, T search_value) { return value != search_value; }; break;
+      return value != search_value;
+      break;
     }
     case ScanType::OpGreaterThan: {
-      comparator = [](T value, T search_value) { return value > search_value; }; break;
+      return value > search_value;
+      break;
     }
     case ScanType::OpGreaterThanEquals: {
-      comparator = [](T value, T search_value) { return value >= search_value; }; break;
+      return value >= search_value;
+      break;
     }
     case ScanType::OpLessThan: {
-      comparator = [](T value, T search_value) { return value < search_value; }; break;
+      return value < search_value;
+      break;
     }
     case ScanType::OpLessThanEquals: {
-      comparator = [](T value, T search_value) { return value <= search_value; }; break;
+      return value <= search_value;
+      break;
     }
-    default: {
-      comparator = [](T value, T search_value) { return false; };
-    }
-  } */
+    default: { return false; };
+  }
+}
 
 }  // namespace opossum
