@@ -41,22 +41,22 @@ TableScan::TableScanImpl<T>::TableScanImpl(const std::shared_ptr<const Table> ta
 }
 
 template <typename T>
-void TableScan::TableScanImpl<T>::_scan_value_segment(const std::shared_ptr<ValueSegment<T>> segment,
-                                                      const T search_value, const std::shared_ptr<PosList> pos_list) {
+void TableScan::TableScanImpl<T>::_scan_value_segment(const std::shared_ptr<ValueSegment<T>> segment, const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id) {
+  const std::vector<T>& values = segment->values();
+  for (ChunkOffset index = 0; index < segment->size(); ++index) {
+    if (_dispatched_comparator(_scan_type, values.at(index), _search_value)) {
+      pos_list->emplace_back(RowID{chunk_id, index});
+    }
+  }
+}
+
+template <typename T>
+void TableScan::TableScanImpl<T>::_scan_dictionary_segment(const std::shared_ptr<DictionarySegment<T>> segment, const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id) {
   // TODO(all): Scan for search value and add positions to position list
 }
 
 template <typename T>
-void TableScan::TableScanImpl<T>::_scan_dictionary_segment(const std::shared_ptr<DictionarySegment<T>> segment,
-                                                           const T search_value,
-                                                           const std::shared_ptr<PosList> pos_list) {
-  // TODO(all): Scan for search value and add positions to position list
-}
-
-template <typename T>
-void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
-                                                          const T search_value,
-                                                          const std::shared_ptr<PosList> pos_list) {
+void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment, const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id) {
   // TODO(all): Scan for search value and add positions to position list
 }
 
@@ -76,7 +76,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
 
     const auto reference_segment = std::dynamic_pointer_cast<ReferenceSegment>(segment);
     if (reference_segment != nullptr) {
-      _scan_reference_segment(reference_segment, _search_value, chunk_pos_list);
+      _scan_reference_segment(reference_segment, chunk_pos_list, chunk_id);
       Chunk chunk;
       for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
         // Create a reference segment for every segment with the current chunk pos list
@@ -89,7 +89,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
 
     const auto dictionary_segment = std::dynamic_pointer_cast<DictionarySegment<T>>(segment);
     if (dictionary_segment != nullptr) {
-      _scan_dictionary_segment(dictionary_segment, _search_value, chunk_pos_list);
+      _scan_dictionary_segment(dictionary_segment, chunk_pos_list, chunk_id);
       Chunk chunk;
       for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
         // Create a reference segment for every segment with the current chunk pos list
@@ -102,7 +102,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
 
     const auto value_segment = std::dynamic_pointer_cast<ValueSegment<T>>(segment);
     if (value_segment != nullptr) {
-      _scan_value_segment(value_segment, _search_value, chunk_pos_list);
+      _scan_value_segment(value_segment, chunk_pos_list, chunk_id);
       Chunk chunk;
       for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
         // Create a reference segment for every segment with the current chunk pos list
