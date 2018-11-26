@@ -41,7 +41,8 @@ TableScan::TableScanImpl<T>::TableScanImpl(const std::shared_ptr<const Table> ta
 }
 
 template <typename T>
-void TableScan::TableScanImpl<T>::_scan_value_segment(const std::shared_ptr<ValueSegment<T>> segment, const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id) {
+void TableScan::TableScanImpl<T>::_scan_value_segment(const std::shared_ptr<ValueSegment<T>> segment,
+                                                      const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id) {
   const std::vector<T>& values = segment->values();
   for (ChunkOffset index = 0; index < segment->size(); ++index) {
     if (_dispatched_comparator(_scan_type, values.at(index), _search_value)) {
@@ -51,12 +52,21 @@ void TableScan::TableScanImpl<T>::_scan_value_segment(const std::shared_ptr<Valu
 }
 
 template <typename T>
-void TableScan::TableScanImpl<T>::_scan_dictionary_segment(const std::shared_ptr<DictionarySegment<T>> segment, const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id) {
-  // TODO(all): Scan for search value and add positions to position list
+void TableScan::TableScanImpl<T>::_scan_dictionary_segment(const std::shared_ptr<DictionarySegment<T>> segment,
+                                                           const std::shared_ptr<PosList> pos_list,
+                                                           const ChunkID chunk_id) {
+  const auto& attribute_vector = segment->attribute_vector();
+  for (ChunkOffset index = 0; index < attribute_vector->size(); ++index) {
+    if (_dispatched_comparator(_scan_type, segment->value_by_value_id(attribute_vector->get(index)), _search_value)) {
+      pos_list->emplace_back(RowID{chunk_id, index});
+    }
+  }
 }
 
 template <typename T>
-void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment, const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id) {
+void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
+                                                          const std::shared_ptr<PosList> pos_list,
+                                                          const ChunkID chunk_id) {
   // TODO(all): Scan for search value and add positions to position list
 }
 
