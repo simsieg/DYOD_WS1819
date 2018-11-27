@@ -40,14 +40,21 @@ TableScan::TableScanImpl<T>::TableScanImpl(const std::shared_ptr<const Table> ta
                                            const ScanType scan_type, const AllTypeVariant search_value)
     : _table{table}, _column_id{column_id}, _scan_type{scan_type}, _search_value{type_cast<T>(search_value)} {
   DebugAssert(
+      // using a lambda function to keep the check inline
       [](const std::string& typestr, const AllTypeVariant& value) -> bool {
         bool cast_successful = true;
+
+        // this function inputs the hana datatype for the given type string
         resolve_data_type(typestr, [&value, &cast_successful](auto type) {
+          // the parameter type is not usable as C Type, therefore defining the type
           using Type = typename decltype(type)::type;
           try {
+            // this check succeeds also for casting float to in
             const auto casted_value = type_cast<Type>(value);
             // std::cout << value << std::endl;
             // std::cout << AllTypeVariant{casted_value} << std::endl;
+
+            //
             if (value != AllTypeVariant{casted_value}) {
               throw std::bad_cast();
             }
