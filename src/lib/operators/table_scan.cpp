@@ -41,19 +41,23 @@ TableScan::TableScanImpl<T>::TableScanImpl(const std::shared_ptr<const Table> ta
     : _table{table}, _column_id{column_id}, _scan_type{scan_type}, _search_value{type_cast<T>(search_value)} {
   DebugAssert(
       [](const std::string& typestr, const AllTypeVariant& value) -> bool {
-        bool cast_successful = false;
+        bool cast_successful = true;
         resolve_data_type(typestr, [&value, &cast_successful](auto type) {
           using Type = typename decltype(type)::type;
           try {
-            type_cast<Type>(value);
-            cast_successful = true;
-          } catch (...) {
+            const auto casted_value = type_cast<Type>(value);
+            //std::cout << value << std::endl;
+            //std::cout << AllTypeVariant{casted_value} << std::endl;
+            if (value != AllTypeVariant{casted_value}) {
+                throw std::bad_cast();
+            }
+          } catch (const std::bad_cast& e) {
+            cast_successful = false;
           }
         });
         return cast_successful;
       }(_table->column_type(_column_id), search_value),
-      "Search Value Type does not match Column Type");
-  // TODO(all): Check type of column and search value - hopefully done
+      "SearchValue Type does not match Column Type");
 }
 
 template <typename T>

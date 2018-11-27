@@ -121,6 +121,14 @@ TEST_F(OperatorsTableScanTest, EmptyResultScan) {
     EXPECT_EQ(scan_1->get_output()->get_chunk(i).column_count(), 2u);
 }
 
+TEST_F(OperatorsTableScanTest, InvalidTypeScan) {
+  auto scan_1 = std::make_shared<TableScan>(_table_wrapper, ColumnID{0}, ScanType::OpGreaterThan, "invalid");
+  EXPECT_THROW(scan_1->execute(), std::bad_cast);
+
+  auto scan_2 = std::make_shared<TableScan>(_table_wrapper, ColumnID{0}, ScanType::OpGreaterThan, 13.37f);
+  EXPECT_THROW(scan_2->execute(), std::logic_error);
+}
+
 TEST_F(OperatorsTableScanTest, SingleScanReturnsCorrectRowCount) {
   std::shared_ptr<Table> expected_result = load_table("src/test/tables/int_float_filtered2.tbl", 1);
 
