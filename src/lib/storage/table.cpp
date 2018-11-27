@@ -25,6 +25,11 @@ Table::Table(const uint32_t chunk_size) {
   _chunks.push_back(std::make_shared<Chunk>());
 }
 
+void Table::add_column_definition(const std::string& name, const std::string& type) {
+  _column_names.push_back(name);
+  _column_types.push_back(type);
+}
+
 void Table::add_column(const std::string& name, const std::string& type) {
   DebugAssert(_chunks.front()->size() == 0, "Tried to add column to a non empty table");
 
