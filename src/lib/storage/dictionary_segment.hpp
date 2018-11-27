@@ -11,6 +11,7 @@
 #include "fitted_attribute_vector.hpp"
 #include "type_cast.hpp"
 #include "types.hpp"
+#include "utils/assert.hpp"
 #include "value_segment.hpp"
 
 namespace opossum {
@@ -34,25 +35,26 @@ class DictionarySegment : public BaseSegment {
     const auto rows = value_segment->size();
 
     _dictionary_vector = _create_dictionary(value_segment->values());
-    _attribute_vector = _create_fittedattributevector(rows);
+    _attribute_vector = _create_fitted_attribute_vector(rows);
 
-    std::for_each(value_segment->values().cbegin(), value_segment->values().cend(), [&](const auto& value) {
+    for (const auto& value : value_segment->values()) {
       const auto search_iter = std::find(_dictionary_vector->cbegin(), _dictionary_vector->cend(), value);
-      _attribute_vector->append(ValueID(std::distance(_dictionary_vector->cbegin(), search_iter)));
-    });
+
+      _attribute_vector->append(
+          ValueID(static_cast<const uint32_t&>(std::distance(_dictionary_vector->cbegin(), search_iter))));
+    }
   }
   // Since most of these methods depend on the template parameter, they need to be implemented in this file
 
   // return the value at a certain position. If you want to write efficient operators, back off!
-  const AllTypeVariant operator[](const size_t i) const override {
-    const ValueID id = ValueID(_attribute_vector->get(i));
-    return _dictionary_vector->at(id);
-  }
+  const AllTypeVariant operator[](size_t i) const override { return get(i); }
 
   // return the value at a certain position.
   const T get(const size_t index) const {
     const ValueID id = ValueID(_attribute_vector->get(index));
-    return _dictionary_vector->at(id);
+    DebugAssert(id < _dictionary_vector->size(),
+                "Tried to get invalid " + std::to_string(index) + ". element (Index out of Bounds)");
+    return _dictionary_vector->operator[](id);
   }
 
   // dictionary segments are immutable
@@ -113,7 +115,7 @@ class DictionarySegment : public BaseSegment {
     return values_list;
   }
 
-  std::shared_ptr<BaseAttributeVector> _create_fittedattributevector(size_t row_count) const {
+  std::shared_ptr<BaseAttributeVector> _create_fitted_attribute_vector(size_t row_count) const {
     std::shared_ptr<BaseAttributeVector> return_vector = nullptr;
     if (row_count <= UINT8_MAX) {
       return_vector = std::make_shared<FittedAttributeVector<uint8_t>>();
