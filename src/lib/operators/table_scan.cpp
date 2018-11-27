@@ -137,9 +137,9 @@ void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<
     } else {
       auto value_segment_ptr = std::dynamic_pointer_cast<ValueSegment<T>>(referenced_segment);
       if (value_segment_ptr != nullptr) {
-        value = value_segment_ptr->values().at(row_id.chunk_offset);
+        value = value_segment_ptr->values()[row_id.chunk_offset];
       } else {
-        throw std::runtime_error("Error: Can not scan unknown segment type");
+        throw std::runtime_error("Cannot scan unknown segment type");
       }
     }
     if (comparator(std::as_const(value), _search_value)) {
