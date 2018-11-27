@@ -130,7 +130,7 @@ void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<
 
     T value;
 
-    // Dispatch referenced segment type
+    // Dispatch referenced segment type, nested for performance reasons
     auto dictionary_segment_ptr = std::dynamic_pointer_cast<DictionarySegment<T>>(referenced_segment);
     if (dictionary_segment_ptr != nullptr) {
       value = dictionary_segment_ptr->get(row_id.chunk_offset);
