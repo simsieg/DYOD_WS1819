@@ -55,7 +55,9 @@ ScanType TableScan::scan_type() const { return _scan_type; }
 const AllTypeVariant& TableScan::search_value() const { return _search_value; }
 
 std::shared_ptr<const Table> TableScan::_on_execute() {
+  Assert(_input_left != nullptr, "No input available");
   const auto input_table = _input_table_left();
+
   // Transfer the scan work to the table_scan_impl instance to dispatch the AllTypeVariant search value
   const auto table_scan_impl = make_unique_by_data_type<BaseTableScanImpl, TableScanImpl>(
       input_table->column_type(_column_id), input_table, _column_id, _scan_type, _search_value);
