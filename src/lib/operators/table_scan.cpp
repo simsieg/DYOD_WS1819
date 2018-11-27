@@ -105,8 +105,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
       Chunk chunk;
       for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
         // Create a reference segment for every segment with the current chunk pos list
-        chunk.add_segment(
-            std::make_shared<ReferenceSegment>(reference_segment->referenced_table(), column_id, chunk_pos_list));
+        chunk.add_segment(std::make_shared<ReferenceSegment>(_table, column_id, chunk_pos_list));
       }
       result_table->emplace_chunk(std::move(chunk));
       continue;
@@ -118,8 +117,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
       Chunk chunk;
       for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
         // Create a reference segment for every segment with the current chunk pos list
-        chunk.add_segment(
-            std::make_shared<ReferenceSegment>(reference_segment->referenced_table(), column_id, chunk_pos_list));
+        chunk.add_segment(std::make_shared<ReferenceSegment>(_table, column_id, chunk_pos_list));
       }
       result_table->emplace_chunk(std::move(chunk));
       continue;
