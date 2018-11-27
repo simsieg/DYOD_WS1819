@@ -83,7 +83,25 @@ template <typename T>
 void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
                                                           const std::shared_ptr<PosList> pos_list,
                                                           const ChunkID chunk_id) {
-  // TODO(all): Scan for search value and add positions to position list
+  for (const auto& row_id : *(segment->pos_list())) {
+    const auto& referenced_chunk = segment->referenced_table()->get_chunk(row_id.chunk_id);
+    const auto& referenced_segment = referenced_chunk.get_segment(_column_id);
+
+    auto value_segment_ptr = std::dynamic_pointer_cast<ValueSegment<T>>(referenced_segment);
+    auto dictionary_segment_ptr = std::dynamic_pointer_cast<DictionarySegment<T>>(referenced_segment);
+
+    T value;
+    if (value_segment_ptr != nullptr) {
+      value = value_segment_ptr->values().at(row_id.chunk_offset);
+    } else if (dictionary_segment_ptr != nullptr) {
+      value = dictionary_segment_ptr->get(row_id.chunk_offset);
+    } else {
+      throw std::runtime_error("Error: Can not scan unknown segment type");
+    }
+    if (_dispatched_comparator(_scan_type, std::as_const(value), _search_value)) {
+      pos_list->emplace_back(row_id);
+    }
+  }
 }
 
 template <typename T>
