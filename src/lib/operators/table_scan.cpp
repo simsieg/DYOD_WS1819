@@ -46,10 +46,10 @@ TableScan::TableScanImpl<T>::TableScanImpl(const std::shared_ptr<const Table> ta
           using Type = typename decltype(type)::type;
           try {
             const auto casted_value = type_cast<Type>(value);
-            //std::cout << value << std::endl;
-            //std::cout << AllTypeVariant{casted_value} << std::endl;
+            // std::cout << value << std::endl;
+            // std::cout << AllTypeVariant{casted_value} << std::endl;
             if (value != AllTypeVariant{casted_value}) {
-                throw std::bad_cast();
+              throw std::bad_cast();
             }
           } catch (const std::bad_cast& e) {
             cast_successful = false;

@@ -11,8 +11,8 @@
 #include "fitted_attribute_vector.hpp"
 #include "type_cast.hpp"
 #include "types.hpp"
-#include "value_segment.hpp"
 #include "utils/assert.hpp"
+#include "value_segment.hpp"
 
 namespace opossum {
 
