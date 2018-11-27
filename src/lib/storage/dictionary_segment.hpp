@@ -51,7 +51,7 @@ class DictionarySegment : public BaseSegment {
   // return the value at a certain position.
   const T get(const size_t index) const {
     const ValueID id = ValueID(_attribute_vector->get(index));
-    DebugAssert(id > 0 && id < _dictionary_vector->size(),
+    DebugAssert(id < _dictionary_vector->size(),
                 "Tried to get invalid " + std::to_string(index) + ". element (Index out of Bounds)");
     return _dictionary_vector->operator[](id);
   }
