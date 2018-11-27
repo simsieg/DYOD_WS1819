@@ -18,6 +18,7 @@
 
 namespace opossum {
 
+// Dispatch the comparator function according to the scan type
 template <typename T>
 std::function<bool(T, T)> get_comparator(ScanType scan_type) {
   switch (scan_type) {
@@ -55,6 +56,7 @@ const AllTypeVariant& TableScan::search_value() const { return _search_value; }
 
 std::shared_ptr<const Table> TableScan::_on_execute() {
   const auto input_table = _input_table_left();
+  // Transfer the scan work to the table_scan_impl instance to dispatch the AllTypeVariant search value
   const auto table_scan_impl = make_unique_by_data_type<BaseTableScanImpl, TableScanImpl>(
       input_table->column_type(_column_id), input_table, _column_id, _scan_type, _search_value);
   return table_scan_impl->scan();
@@ -64,22 +66,18 @@ template <typename T>
 TableScan::TableScanImpl<T>::TableScanImpl(const std::shared_ptr<const Table> table, ColumnID column_id,
                                            const ScanType scan_type, const AllTypeVariant search_value)
     : _table{table}, _column_id{column_id}, _scan_type{scan_type}, _search_value{type_cast<T>(search_value)} {
-  DebugAssert(
-      // using a lambda function to keep the check inline
+  Assert(
+      // Using a lambda function to keep the check inline
       [](const std::string& typestr, const AllTypeVariant& value) -> bool {
         bool cast_successful = true;
 
-        // this function inputs the hana datatype for the given type string
+        // This function inputs the hana datatype for the given type string
         resolve_data_type(typestr, [&value, &cast_successful](auto type) {
-          // the parameter type is not usable as C Type, therefore defining the type
+          // The parameter type is not usable as C Type, therefore defining the type
           using Type = typename decltype(type)::type;
           try {
-            // this check succeeds also for casting float to in
+            // This check succeeds also for casting float to in
             const auto casted_value = type_cast<Type>(value);
-            // std::cout << value << std::endl;
-            // std::cout << AllTypeVariant{casted_value} << std::endl;
-
-            //
             if (value != AllTypeVariant{casted_value}) {
               throw std::bad_cast();
             }
@@ -111,6 +109,7 @@ void TableScan::TableScanImpl<T>::_scan_dictionary_segment(const std::shared_ptr
                                                            const std::function<bool(T, T)> comparator) {
   const auto& attribute_vector = segment->attribute_vector();
   for (ChunkOffset index = 0; index < attribute_vector->size(); ++index) {
+    // Decompress dictionary for a value comparison
     if (comparator(segment->value_by_value_id(attribute_vector->get(index)), _search_value)) {
       pos_list->emplace_back(RowID{chunk_id, index});
     }
@@ -123,11 +122,13 @@ void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<
                                                           const ChunkID chunk_id,
                                                           const std::function<bool(T, T)> comparator) {
   for (const auto& row_id : *(segment->pos_list())) {
+    // Get the referenced segment
     const auto& referenced_chunk = segment->referenced_table()->get_chunk(row_id.chunk_id);
     const auto& referenced_segment = referenced_chunk.get_segment(_column_id);
 
     T value;
 
+    // Dispatch referenced segment type
     auto dictionary_segment_ptr = std::dynamic_pointer_cast<DictionarySegment<T>>(referenced_segment);
     if (dictionary_segment_ptr != nullptr) {
       value = dictionary_segment_ptr->get(row_id.chunk_offset);
@@ -149,6 +150,7 @@ template <typename T>
 std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
   // Initialize comparator
   const auto comparator = get_comparator<T>(_scan_type);
+
   // Prepare result table
   const auto result_table = std::make_shared<Table>();
   for (auto column_id = ColumnID{0}; column_id < _table->column_count(); column_id++) {
@@ -161,19 +163,6 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
     const auto chunk_pos_list = std::make_shared<PosList>();
     const auto segment = _table->get_chunk(chunk_id).get_segment(_column_id);
 
-    const auto reference_segment = std::dynamic_pointer_cast<ReferenceSegment>(segment);
-    if (reference_segment != nullptr) {
-      _scan_reference_segment(reference_segment, chunk_pos_list, chunk_id, comparator);
-      Chunk chunk;
-      for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
-        // Create a reference segment for every segment with the current chunk pos list
-        chunk.add_segment(
-            std::make_shared<ReferenceSegment>(reference_segment->referenced_table(), column_id, chunk_pos_list));
-      }
-      result_table->emplace_chunk(std::move(chunk));
-      continue;
-    }
-
     const auto dictionary_segment = std::dynamic_pointer_cast<DictionarySegment<T>>(segment);
     if (dictionary_segment != nullptr) {
       _scan_dictionary_segment(dictionary_segment, chunk_pos_list, chunk_id, comparator);
@@ -181,6 +170,20 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
       for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
         // Create a reference segment for every segment with the current chunk pos list
         chunk.add_segment(std::make_shared<ReferenceSegment>(_table, column_id, chunk_pos_list));
+      }
+      result_table->emplace_chunk(std::move(chunk));
+      continue;
+    }
+
+    const auto reference_segment = std::dynamic_pointer_cast<ReferenceSegment>(segment);
+    if (reference_segment != nullptr) {
+      _scan_reference_segment(reference_segment, chunk_pos_list, chunk_id, comparator);
+      Chunk chunk;
+      for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
+        // Create a reference segment for every segment with the current chunk pos list
+        // The referenced table is equivalent to the referenced table of the ReferenceSegment
+        chunk.add_segment(
+            std::make_shared<ReferenceSegment>(reference_segment->referenced_table(), column_id, chunk_pos_list));
       }
       result_table->emplace_chunk(std::move(chunk));
       continue;
