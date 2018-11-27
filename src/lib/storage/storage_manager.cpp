@@ -16,14 +16,20 @@ StorageManager& StorageManager::get() {
   return singleton_instance;
 }
 
-void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) { _tables[name] = table; }
+void StorageManager::add_table(const std::string& name, std::shared_ptr<Table> table) {
+  _tables[name] = std::move(table);
+}
 
 void StorageManager::drop_table(const std::string& name) {
   auto result = _tables.erase(name);
   DebugAssert(result == 1, "Table '" + name + "' not found");
 }
 
-std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const { return _tables.at(name); }
+std::shared_ptr<Table> StorageManager::get_table(const std::string& name) const {
+  DebugAssert(has_table(name), "Table " + name + " does not exist");
+  // Fun fact: <map>.operator[] is no 'const' operator and therefore cannot be used here
+  return _tables.at(name);
+}
 
 bool StorageManager::has_table(const std::string& name) const { return _tables.count(name) != 0; }
 

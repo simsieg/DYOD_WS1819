@@ -28,10 +28,12 @@ class TableScan : public AbstractOperator {
   TableScan(const std::shared_ptr<const AbstractOperator> in, ColumnID column_id, const ScanType scan_type,
             const AllTypeVariant search_value);
 
-  ~TableScan() = default;
+  ~TableScan() override = default;
 
   ColumnID column_id() const;
+
   ScanType scan_type() const;
+
   const AllTypeVariant& search_value() const;
 
  protected:
