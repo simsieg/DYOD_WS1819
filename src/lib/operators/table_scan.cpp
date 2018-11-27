@@ -76,7 +76,7 @@ TableScan::TableScanImpl<T>::TableScanImpl(const std::shared_ptr<const Table> ta
           // The parameter type is not usable as C Type, therefore defining the type
           using Type = typename decltype(type)::type;
           try {
-            // This check succeeds also for casting float to in
+            // This check succeeds also for casting float to int, except if both values are equivalent anyway
             const auto casted_value = type_cast<Type>(value);
             if (value != AllTypeVariant{casted_value}) {
               throw std::bad_cast();
