@@ -18,6 +18,31 @@
 
 namespace opossum {
 
+template <typename T>
+std::function<bool (T, T)> get_comparator(ScanType scan_type) {
+  switch (scan_type) {
+    case ScanType::OpEquals: {
+      return [](T value, T search_value) { return value == search_value; };
+    }
+    case ScanType::OpNotEquals: {
+      return [](T value, T search_value) { return value != search_value; };
+    }
+    case ScanType::OpGreaterThan: {
+      return [](T value, T search_value) { return value > search_value; };
+    }
+    case ScanType::OpGreaterThanEquals: {
+      return [](T value, T search_value) { return value >= search_value; };
+    }
+    case ScanType::OpLessThan: {
+      return [](T value, T search_value) { return value < search_value; };
+    }
+    case ScanType::OpLessThanEquals: {
+      return [](T value, T search_value) { return value <= search_value; };
+    }
+    default: { throw std::runtime_error("Error: Unknown scan type"); };
+  };
+}
+
 TableScan::TableScan(const std::shared_ptr<const AbstractOperator> in, ColumnID column_id, const ScanType scan_type,
                      const AllTypeVariant search_value)
     : AbstractOperator(in), _column_id{column_id}, _scan_type{scan_type}, _search_value{search_value} {}
@@ -69,10 +94,11 @@ TableScan::TableScanImpl<T>::TableScanImpl(const std::shared_ptr<const Table> ta
 
 template <typename T>
 void TableScan::TableScanImpl<T>::_scan_value_segment(const std::shared_ptr<ValueSegment<T>> segment,
-                                                      const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id) {
+                                                      const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id,
+                                                      const std::function<bool (T, T)> comparator) {
   const std::vector<T>& values = segment->values();
   for (ChunkOffset index = 0; index < segment->size(); ++index) {
-    if (_dispatched_comparator(_scan_type, values.at(index), _search_value)) {
+    if (comparator(values.at(index), _search_value)) {
       pos_list->emplace_back(RowID{chunk_id, index});
     }
   }
@@ -81,10 +107,10 @@ void TableScan::TableScanImpl<T>::_scan_value_segment(const std::shared_ptr<Valu
 template <typename T>
 void TableScan::TableScanImpl<T>::_scan_dictionary_segment(const std::shared_ptr<DictionarySegment<T>> segment,
                                                            const std::shared_ptr<PosList> pos_list,
-                                                           const ChunkID chunk_id) {
+                                                           const ChunkID chunk_id, const std::function<bool (T, T)> comparator) {
   const auto& attribute_vector = segment->attribute_vector();
   for (ChunkOffset index = 0; index < attribute_vector->size(); ++index) {
-    if (_dispatched_comparator(_scan_type, segment->value_by_value_id(attribute_vector->get(index)), _search_value)) {
+    if (comparator(segment->value_by_value_id(attribute_vector->get(index)), _search_value)) {
       pos_list->emplace_back(RowID{chunk_id, index});
     }
   }
@@ -93,23 +119,25 @@ void TableScan::TableScanImpl<T>::_scan_dictionary_segment(const std::shared_ptr
 template <typename T>
 void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
                                                           const std::shared_ptr<PosList> pos_list,
-                                                          const ChunkID chunk_id) {
+                                                          const ChunkID chunk_id, const std::function<bool (T, T)> comparator) {
   for (const auto& row_id : *(segment->pos_list())) {
     const auto& referenced_chunk = segment->referenced_table()->get_chunk(row_id.chunk_id);
     const auto& referenced_segment = referenced_chunk.get_segment(_column_id);
 
-    auto value_segment_ptr = std::dynamic_pointer_cast<ValueSegment<T>>(referenced_segment);
-    auto dictionary_segment_ptr = std::dynamic_pointer_cast<DictionarySegment<T>>(referenced_segment);
-
     T value;
-    if (value_segment_ptr != nullptr) {
-      value = value_segment_ptr->values().at(row_id.chunk_offset);
-    } else if (dictionary_segment_ptr != nullptr) {
+
+    auto dictionary_segment_ptr = std::dynamic_pointer_cast<DictionarySegment<T>>(referenced_segment);
+    if (dictionary_segment_ptr != nullptr) {
       value = dictionary_segment_ptr->get(row_id.chunk_offset);
     } else {
-      throw std::runtime_error("Error: Can not scan unknown segment type");
+      auto value_segment_ptr = std::dynamic_pointer_cast<ValueSegment<T>>(referenced_segment);
+      if (value_segment_ptr != nullptr) {
+        value = value_segment_ptr->values().at(row_id.chunk_offset);
+      } else {
+        throw std::runtime_error("Error: Can not scan unknown segment type");
+      }
     }
-    if (_dispatched_comparator(_scan_type, std::as_const(value), _search_value)) {
+    if (comparator(std::as_const(value), _search_value)) {
       pos_list->emplace_back(row_id);
     }
   }
@@ -117,6 +145,8 @@ void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<
 
 template <typename T>
 std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
+  // Initialize comparator
+  const auto comparator = get_comparator<T>(_scan_type);
   // Prepare result table
   const auto result_table = std::make_shared<Table>();
   for (auto column_id = ColumnID{0}; column_id < _table->column_count(); column_id++) {
@@ -131,7 +161,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
 
     const auto reference_segment = std::dynamic_pointer_cast<ReferenceSegment>(segment);
     if (reference_segment != nullptr) {
-      _scan_reference_segment(reference_segment, chunk_pos_list, chunk_id);
+      _scan_reference_segment(reference_segment, chunk_pos_list, chunk_id, comparator);
       Chunk chunk;
       for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
         // Create a reference segment for every segment with the current chunk pos list
@@ -144,7 +174,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
 
     const auto dictionary_segment = std::dynamic_pointer_cast<DictionarySegment<T>>(segment);
     if (dictionary_segment != nullptr) {
-      _scan_dictionary_segment(dictionary_segment, chunk_pos_list, chunk_id);
+      _scan_dictionary_segment(dictionary_segment, chunk_pos_list, chunk_id, comparator);
       Chunk chunk;
       for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
         // Create a reference segment for every segment with the current chunk pos list
@@ -156,7 +186,7 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
 
     const auto value_segment = std::dynamic_pointer_cast<ValueSegment<T>>(segment);
     if (value_segment != nullptr) {
-      _scan_value_segment(value_segment, chunk_pos_list, chunk_id);
+      _scan_value_segment(value_segment, chunk_pos_list, chunk_id, comparator);
       Chunk chunk;
       for (auto column_id = ColumnID{0}; column_id < result_table->column_count(); column_id++) {
         // Create a reference segment for every segment with the current chunk pos list
@@ -171,36 +201,4 @@ std::shared_ptr<const Table> TableScan::TableScanImpl<T>::scan() {
 
   return result_table;
 }
-
-template <typename T>
-bool _dispatched_comparator(ScanType scan_type, T& value, T& search_value) {
-  switch (scan_type) {
-    case ScanType::OpEquals: {
-      return value == search_value;
-      break;
-    }
-    case ScanType::OpNotEquals: {
-      return value != search_value;
-      break;
-    }
-    case ScanType::OpGreaterThan: {
-      return value > search_value;
-      break;
-    }
-    case ScanType::OpGreaterThanEquals: {
-      return value >= search_value;
-      break;
-    }
-    case ScanType::OpLessThan: {
-      return value < search_value;
-      break;
-    }
-    case ScanType::OpLessThanEquals: {
-      return value <= search_value;
-      break;
-    }
-    default: { return false; };
-  }
-}
-
 }  // namespace opossum
