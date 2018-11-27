@@ -19,7 +19,7 @@
 namespace opossum {
 
 template <typename T>
-std::function<bool (T, T)> get_comparator(ScanType scan_type) {
+std::function<bool(T, T)> get_comparator(ScanType scan_type) {
   switch (scan_type) {
     case ScanType::OpEquals: {
       return [](T value, T search_value) { return value == search_value; };
@@ -40,7 +40,7 @@ std::function<bool (T, T)> get_comparator(ScanType scan_type) {
       return [](T value, T search_value) { return value <= search_value; };
     }
     default: { throw std::runtime_error("Error: Unknown scan type"); };
-  };
+  }
 }
 
 TableScan::TableScan(const std::shared_ptr<const AbstractOperator> in, ColumnID column_id, const ScanType scan_type,
@@ -95,7 +95,7 @@ TableScan::TableScanImpl<T>::TableScanImpl(const std::shared_ptr<const Table> ta
 template <typename T>
 void TableScan::TableScanImpl<T>::_scan_value_segment(const std::shared_ptr<ValueSegment<T>> segment,
                                                       const std::shared_ptr<PosList> pos_list, const ChunkID chunk_id,
-                                                      const std::function<bool (T, T)> comparator) {
+                                                      const std::function<bool(T, T)> comparator) {
   const std::vector<T>& values = segment->values();
   for (ChunkOffset index = 0; index < segment->size(); ++index) {
     if (comparator(values.at(index), _search_value)) {
@@ -107,7 +107,8 @@ void TableScan::TableScanImpl<T>::_scan_value_segment(const std::shared_ptr<Valu
 template <typename T>
 void TableScan::TableScanImpl<T>::_scan_dictionary_segment(const std::shared_ptr<DictionarySegment<T>> segment,
                                                            const std::shared_ptr<PosList> pos_list,
-                                                           const ChunkID chunk_id, const std::function<bool (T, T)> comparator) {
+                                                           const ChunkID chunk_id,
+                                                           const std::function<bool(T, T)> comparator) {
   const auto& attribute_vector = segment->attribute_vector();
   for (ChunkOffset index = 0; index < attribute_vector->size(); ++index) {
     if (comparator(segment->value_by_value_id(attribute_vector->get(index)), _search_value)) {
@@ -119,7 +120,8 @@ void TableScan::TableScanImpl<T>::_scan_dictionary_segment(const std::shared_ptr
 template <typename T>
 void TableScan::TableScanImpl<T>::_scan_reference_segment(const std::shared_ptr<ReferenceSegment> segment,
                                                           const std::shared_ptr<PosList> pos_list,
-                                                          const ChunkID chunk_id, const std::function<bool (T, T)> comparator) {
+                                                          const ChunkID chunk_id,
+                                                          const std::function<bool(T, T)> comparator) {
   for (const auto& row_id : *(segment->pos_list())) {
     const auto& referenced_chunk = segment->referenced_table()->get_chunk(row_id.chunk_id);
     const auto& referenced_segment = referenced_chunk.get_segment(_column_id);
